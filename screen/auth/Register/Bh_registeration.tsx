@@ -103,17 +103,17 @@ const RegisterWithBh: React.FC = () => {
   // Initial form data
   const initialFormData: FormData = useMemo(
     () => ({
-      name: "",
-      email: "",
-      reEmail: "",
-      number: "",
-      password: "",
+      name: "Anish Jha",
+      email: "anishjha123456@gmail.com",
+      reEmail: "anishjha123456@gmail.com",
+      number: "9632589632",
+      password: "Mahakaal@21",
       category: "676ef9795c75082fcbc59c51", // Default category
       address: {
-        area: "",
+        area: "Rohini",
         street_address: "",
-        landmark: "",
-        pincode: "",
+        landmark: "Shiva",
+        pincode: "110085",
         location: {
           type: "Point",
           coordinates: [78.2693, 25.369], // Default coordinates
@@ -154,27 +154,17 @@ const RegisterWithBh: React.FC = () => {
     }
   }, [bh_id]);
 
-  // Function to fetch categories
-  const fetchCategory = useCallback(async () => {
-    try {
-      const { data } = await axios.get(`${API_URL_WEB}/api/v1/get-category`);
-      if (data.success && Array.isArray(data.data)) {
-        setCategories(data.data);
-      }
-    } catch (err) {
-      console.error("Error fetching categories:", err);
-    }
-  }, []);
+
 
   // Initialize data on component mount
   useEffect(() => {
     const initializeData = async () => {
       setLoading(true);
-      await Promise.all([checkBhId(), fetchCategory()]);
+      await Promise.all([checkBhId()]);
     };
 
     initializeData();
-  }, [checkBhId, fetchCategory]);
+  }, [checkBhId]);
 
   // Set up autofocus for the first input field
   useEffect(() => {
@@ -251,15 +241,17 @@ const RegisterWithBh: React.FC = () => {
   }, [formData]);
 
   // Function to handle form submission
-  const handleSubmit = useCallback(async () => {
-    if (!validateForm()) return;
-
+  const handleSubmit = async () => {
+    console.log("!validateForm()!", !validateForm());
+    // if (!validateForm()) return;
     setSubmitting(true);
+    console.log("Submit Done!");
     try {
       const response = await axios.post(
         `${API_URL_WEB}/api/v1/register_vendor`,
         formData
       );
+      console.log(response.data?.success)
 
       if (response.data?.success) {
         navigation.navigate("OtpVerify", {
@@ -270,13 +262,14 @@ const RegisterWithBh: React.FC = () => {
         });
       }
     } catch (error: any) {
+      console.error(error);
       const errorMessage =
         error.response?.data?.message || "Registration failed";
       Alert.alert("Registration Error", errorMessage);
     } finally {
       setSubmitting(false);
     }
-  }, [formData, validateForm, navigation]);
+  }
 
   // Function to handle input changes
   const handleInputChange = useCallback(
@@ -285,7 +278,7 @@ const RegisterWithBh: React.FC = () => {
         ...prevData,
         [field]: value,
       }));
-      
+
       // Clear error when user types
       if (errors[field]) {
         setErrors(prev => ({
@@ -307,7 +300,7 @@ const RegisterWithBh: React.FC = () => {
           [field]: value,
         },
       }));
-      
+
       // Clear error when user types
       if (field === 'pincode' && errors.pincode) {
         setErrors(prev => ({
@@ -365,7 +358,7 @@ const RegisterWithBh: React.FC = () => {
         <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
           <View style={styles.formContainer}>
             <Text style={styles.formTitle}>Register Your Account</Text>
-            
+
             {/* Name Input */}
             <FormInput
               label="Name (as per Aadhaar Card)"
@@ -379,7 +372,7 @@ const RegisterWithBh: React.FC = () => {
               blurOnSubmit={false}
             />
 
-           
+
 
             {/* Email Input */}
             <FormInput
@@ -440,13 +433,13 @@ const RegisterWithBh: React.FC = () => {
               blurOnSubmit={false}
             />
 
-        
+
 
             {/* Address Form */}
             <View style={styles.sectionDivider}>
               <Text style={styles.sectionTitle}>Address Information</Text>
             </View>
-            
+
             <AddressForm
               address={formData.address}
               onAddressChange={handleAddressChange}
@@ -471,7 +464,7 @@ const RegisterWithBh: React.FC = () => {
             {/* Submit Button */}
             <TouchableOpacity
               style={buttonStyles}
-              onPress={handleSubmit}
+              onPress={() => handleSubmit()}
               disabled={isButtonDisabled}
             >
               {submitting ? (

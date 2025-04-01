@@ -4,19 +4,20 @@ import axios from 'axios';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { API_URL_WEB } from '../../../constant/Api';
+import { COLORS } from '../../../constant/Colors';
 
 type RootStackParamList = {
-  'profile-complete': { BH: string };
-  'otp-verification': { type: string; email: string; number: string };
+    'profile-complete': { BH: string };
+    'otp-verification': { type: string; email: string; number: string };
 };
 
 type OtpVerificationScreenRouteProp = RouteProp<RootStackParamList, 'otp-verification'>;
 type ProfileCompleteScreenNavigationProp = StackNavigationProp<RootStackParamList, 'profile-complete'>;
 
 interface FormData {
-  otp: string;
-  type: string;
-  email: string;
+    otp: string;
+    type: string;
+    email: string;
 }
 
 const BhOtpVerification: React.FC = () => {
@@ -139,11 +140,11 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FFF4F4',
+        backgroundColor: COLORS.lightAccent,
         padding: 16,
     },
     card: {
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.white,
         padding: 20,
         borderRadius: 10,
         width: '100%',
@@ -177,20 +178,20 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     button: {
-        backgroundColor: '#D62C27',
+        backgroundColor: COLORS.dark,
         padding: 15,
         borderRadius: 8,
         alignItems: 'center',
         marginBottom: 10,
     },
     buttonText: {
-        color: '#fff',
+        color: COLORS.white,
         fontSize: 16,
         fontWeight: 'bold',
     },
     resendText: {
         textAlign: 'center',
-        color: '#D62C27',
+        color: COLORS.error,
         fontSize: 14,
     },
 });

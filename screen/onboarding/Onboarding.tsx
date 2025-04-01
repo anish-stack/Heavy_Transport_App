@@ -1,7 +1,7 @@
 import { View, Text, StatusBar, Image, TouchableOpacity } from "react-native";
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import styles from "./onboarding";
+import styles from "./onboardingStyle";
 import { useNavigation } from "@react-navigation/native";
 export default function Onboarding() {
   const navigation = useNavigation();

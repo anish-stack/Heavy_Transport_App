@@ -7,6 +7,9 @@ import Onboarding from "./screen/onboarding/Onboarding";
 import Home from "./screen/Home/Home";
 import Bh_Verification from "./screen/auth/BH_Steps/Bh_Verification";
 import RegisterWithBh from "./screen/auth/Register/Bh_registeration";
+import BhOtpVerification from "./screen/auth/Register/BhOtpVerification";
+import Login from "./screen/auth/login/Login";
+import Complete_Profile from "./screen/auth/Profile_Complete/Complete_Profile";
 
 const Stack = createNativeStackNavigator();
 
@@ -52,6 +55,45 @@ export default function App() {
               },
             }}
             component={RegisterWithBh}
+          />
+          <Stack.Screen
+            name="OtpVerify"
+            options={{
+              headerShown: true,
+              title: "Verify Otp ",
+              headerTitleStyle: {
+                fontSize: 16,
+                fontWeight: "bold",
+                color: "#000",
+              },
+            }}
+            component={BhOtpVerification}
+          />
+          <Stack.Screen
+            name="login"
+            options={{
+              headerShown: true,
+              title: "Login To Account",
+              headerTitleStyle: {
+                fontSize: 16,
+                fontWeight: "bold",
+                color: "#000",
+              },
+            }}
+            component={Login}
+          />
+          <Stack.Screen
+            name="Complete_Profile"
+            options={{
+              headerShown: true,
+              title: "Complete Your Profile",
+              headerTitleStyle: {
+                fontSize: 16,
+                fontWeight: "bold",
+                color: "#000",
+              },
+            }}
+            component={Complete_Profile}
           />
         </Stack.Navigator>
       </NavigationContainer>

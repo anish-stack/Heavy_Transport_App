@@ -16,7 +16,7 @@ import styles from "./Bh_Styles";
 import { COLORS } from "../../../constant/Colors";
 
 export default function Bh_Verification() {
-  const [bh, setBh] = useState("BH");
+  const [bh, setBh] = useState("BH960114");
   const [name, setName] = useState("");
   const [response, setResponse] = useState(null);
   const [error, setError] = useState(null);
