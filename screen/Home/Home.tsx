@@ -88,10 +88,10 @@ export default function Home() {
             style={styles.profileImage}
           />
           <View style={styles.profileInfo}>
-            <Text style={styles.name}>{user.name}</Text>
-            <Text style={styles.partnerId}>Partner ID: {user.Bh_Id}</Text>
+            <Text style={styles.name}>{user?.name || "Guest"}</Text>
+            <Text style={styles.partnerId}>Partner ID: {user?.Bh_Id || "ID"}</Text>
             <View style={[styles.statusBadge, { backgroundColor: colors.success + '20' }]}>
-              <Text style={[styles.statusText, { color: colors.success }]}>{user.status}</Text>
+              <Text style={[styles.statusText, { color: colors.success }]}>{user?.status || "Inactive"}</Text>
             </View>
           </View>
         </View>
@@ -102,12 +102,12 @@ export default function Home() {
         <View style={styles.statCard}>
           <Ionicons name="time" size={scale(20)} color={colors.primary} />
           <Text style={styles.statTitle}>Working Hours</Text>
-          <Text style={styles.statValue}>{user.call_timing.start_time} - {user.call_timing.end_time}</Text>
+          <Text style={styles.statValue}>{user?.call_timing?.start_time} - {user?.call_timing?.end_time}</Text>
         </View>
         <View style={styles.statCard}>
           <Ionicons name="car" size={scale(20)} color={colors.primary} />
           <Text style={styles.statTitle}>Total Vehicles</Text>
-          <Text style={styles.statValue}>{user.vehicle_info.length}</Text>
+          <Text style={styles.statValue}>{user?.vehicle_info?.length}</Text>
         </View>
       </View>
 
@@ -129,7 +129,7 @@ export default function Home() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Your Vehicles</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.vehiclesScroll}>
-          {user.vehicle_info.map(renderVehicleCard)}
+          {user?.vehicle_info.map(renderVehicleCard)}
         </ScrollView>
       </View>
 
@@ -137,7 +137,7 @@ export default function Home() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Service Areas</Text>
         <View style={styles.areasContainer}>
-          {user.service_areas.map(renderServiceArea)}
+          {user?.service_areas.map(renderServiceArea)}
         </View>
       </View>
     </Layout>

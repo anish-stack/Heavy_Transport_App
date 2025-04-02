@@ -24,6 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const loadToken = async () => {
       try {
+        
         const storedToken = await SecureStore.getItemAsync("authToken");
         if (storedToken) {
           setToken(storedToken);
@@ -63,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const getToken = async () => {
     const storedToken = await SecureStore.getItem("authToken");
+    getProfile(storedToken)
     return storedToken;
   };
 

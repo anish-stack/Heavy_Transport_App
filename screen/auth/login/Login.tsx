@@ -76,9 +76,13 @@ export default function Login() {
                 otp: Number.parseInt(otp),
             })
 
+            console.log(response.data.success)
+            console.log(response.data.token)
+            console.log(response.data)
             if (response.data && response.data.success) {
+                console.log(response.data.token)
                 setLoginSuccess(true)
-                const { token } = response.data | {}
+                const { token } = response.data || {}
                 setToken(token)
                 Alert.alert("Success", "Login successful!")
                 setTimeout(() => {

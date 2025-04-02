@@ -129,7 +129,6 @@ export const resendOtpPartner = async (
 };
 
 export const getMyProfile = async (token: token): Promise<RegisterRes> => {
-
   try {
     const response: AxiosResponse<RegisterRes> = await axios.get(
       `${API_URL_APP_LOCAL}/heavy/heavy-vehicle-profile`,
@@ -149,3 +148,6 @@ export const getMyProfile = async (token: token): Promise<RegisterRes> => {
     });
   }
 };
+
+
+

@@ -13,6 +13,10 @@ import Complete_Profile from "./screen/auth/Profile_Complete/Complete_Profile";
 import Verify_complete_profile_otp from "./screen/auth/Profile_Complete/Verify_complete_profile_otp";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ActivityIndicator, View } from "react-native";
+import Profile from "./screen/Profile/Profile";
+import EditProfile from "./screen/Profile/Edit-Profile/EditProfile";
+import ServiceAreaChange from "./screen/Profile/Service-Area-Change/ServiceAreaChange";
+import ProfileVehiclesUpdate from "./screen/Profile/profile-vehicles/ProfileVehiclesUpdate";
 
 const Stack = createNativeStackNavigator();
 function LoadingScreen() {
@@ -26,12 +30,13 @@ function LoadingScreen() {
 function AppNavigator() {
   const { token, loading, isAuthenticated } = useAuth();
 
-
   if (loading) {
     return <LoadingScreen />;
   }
   return (
-    <Stack.Navigator initialRouteName={token && isAuthenticated ? "Home" : "Onboarding"}>
+    <Stack.Navigator
+      initialRouteName={token && isAuthenticated ? "Home" : "Onboarding"}
+    >
       {!token && (
         <Stack.Screen
           name="Onboarding"
@@ -121,6 +126,36 @@ function AppNavigator() {
           },
         }}
         component={Verify_complete_profile_otp}
+      />
+
+      {/* Profile */}
+      <Stack.Screen
+        name="Profile"
+        options={{
+          headerShown: false,
+        }}
+        component={Profile}
+      />
+      <Stack.Screen
+        name="profile-edit"
+        options={{
+          headerShown: false,
+        }}
+        component={EditProfile}
+      />
+      <Stack.Screen
+        name="profile-service-areas"
+        options={{
+          headerShown: false,
+        }}
+        component={ServiceAreaChange}
+      />
+      <Stack.Screen
+        name="profile-vehicles"
+        options={{
+          headerShown: false,
+        }}
+        component={ProfileVehiclesUpdate}
       />
     </Stack.Navigator>
   );

@@ -7,8 +7,8 @@ import { useAuth } from '../../context/AuthContext';
 import Sidebar from './Sidebar';
 import { scale, moderateScale } from 'react-native-size-matters';
 
-export default function Layout({ children, onRefresh }) {
-    const { user } = useAuth();
+export default function Layout({ children, onRefresh ,isHeaderShow=true,isBottomBarShow=true }) {
+    const { user,getToken } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -17,9 +17,11 @@ export default function Layout({ children, onRefresh }) {
         setRefreshing(true);
         
         try {
+      
             // Call the onRefresh prop if provided
             if (typeof onRefresh === 'function') {
                 await onRefresh();
+               
             }
         } catch (error) {
             console.error('Refresh error:', error);
@@ -33,10 +35,13 @@ export default function Layout({ children, onRefresh }) {
 
     return (
         <SafeAreaView style={styles.container}>
+            {isHeaderShow && (
+
             <Header
                 name={user?.name || 'Guest'}
                 onMenuPress={() => setIsSidebarOpen(true)}
             />
+            )}
             <ScrollView 
                 showsVerticalScrollIndicator={false} 
                 style={styles.contentContainer}
@@ -53,7 +58,9 @@ export default function Layout({ children, onRefresh }) {
             >
                 {children}
             </ScrollView>
+            {isBottomBarShow && (
             <BottomBar />
+            )}
             <Sidebar
                 name={user?.name || 'Guest'}
                 email={user?.email || 'email@gmail.com'}

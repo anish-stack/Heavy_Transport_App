@@ -3,6 +3,7 @@ import { View, Text, TextInput, StyleSheet, KeyboardTypeOptions } from 'react-na
 import { COLORS } from '../constant/Colors';
 
 interface FormInputProps {
+  icon?: React.ReactNode;
   label: string;
   value: string;
   onChangeText: (text: string) => void;
@@ -13,6 +14,7 @@ interface FormInputProps {
 }
 
 export default function FormInput({
+  icon,
   label,
   value,
   onChangeText,
@@ -23,15 +25,19 @@ export default function FormInput({
 }: FormInputProps) {
   return (
     <View style={styles.inputGroup}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={[styles.input, error && styles.inputError]}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        secureTextEntry={secureTextEntry}
-        keyboardType={keyboardType}
-      />
+      {label && <Text style={styles.label}>{label}</Text>}
+      <View style={[styles.inputWrapper, error && styles.inputError]}>
+        {icon && <View style={styles.iconContainer}>{icon}</View>}
+        <TextInput
+          style={styles.input}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={COLORS.lightDark}
+          secureTextEntry={secureTextEntry}
+          keyboardType={keyboardType}
+        />
+      </View>
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
@@ -42,23 +48,36 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 14,
-    marginBottom: 8,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
     color: COLORS.dark,
   },
-  input: {
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     backgroundColor: '#fff',
+
+  },
+  iconContainer: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: COLORS.dark,
   },
   inputError: {
     borderColor: COLORS.error,
   },
   errorText: {
-    color: COLORS.lightDark,
+    color: COLORS.error,
     fontSize: 12,
-    marginTop: 5,
+    marginTop: 4,
   },
 });
