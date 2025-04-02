@@ -251,6 +251,39 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(16),
     fontWeight: "bold",
   },
+
+ 
+  addNewButton: {
+    backgroundColor: COLORS.success,
+    borderRadius: 8,
+    padding: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    marginBottom: 16,
+  },
+  addNewButtonText: {
+    color: COLORS.white,
+    fontWeight: "bold",
+    marginLeft: 8,
+  },
+  addVehicleForm: {
+    padding: 8,
+  },
+  addVehicleButton: {
+    backgroundColor: COLORS.success,
+    borderRadius: 8,
+    padding: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    marginTop: 16,
+  },
+  addVehicleButtonText: {
+    color: COLORS.white,
+    fontWeight: "bold",
+    marginLeft: 8,
+  }
 })
 
 export default styles

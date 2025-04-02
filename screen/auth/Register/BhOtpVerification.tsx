@@ -56,7 +56,7 @@ const BhOtpVerification: React.FC = () => {
                 formData
             );
             Alert.alert("Success", response.data.message || "OTP verified successfully!", [
-                { text: "OK", onPress: () => navigation.navigate('profile-complete', { BH: response.data.BHID }) }
+                { text: "OK", onPress: () => navigation.navigate('login', { BH: response.data.BHID }) }
             ]);
         } catch (error: any) {
             Alert.alert("Error", error.response?.data?.message || "Failed to verify OTP.");

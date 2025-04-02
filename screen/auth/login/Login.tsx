@@ -1,21 +1,34 @@
 
 import { View, Text, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { API_URL_APP_LOCAL } from "../../../constant/Api"
 import axios from "axios"
 import FormInput from "../../../components/FormInput"
 import styles from "./LoginStyle"
-import { useNavigation } from "@react-navigation/native"
+import { useNavigation, useRoute } from "@react-navigation/native"
+import { useAuth } from "../../../context/AuthContext"
 
 
 export default function Login() {
+    const route = useRoute()
+    const { BH } = route.params || {}
+
     const [bhId, setBhId] = useState("BH436459")
     const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState<string>("")
     const [otp, setOtp] = useState<string>("")
+    const { setToken } = useAuth()
     const [isOtpSent, setIsOtpSent] = useState<boolean>(false)
     const [loginSuccess, setLoginSuccess] = useState<boolean>(false)
     const navigation = useNavigation()
+
+    useEffect(() => {
+        if (BH) {
+            setBhId(BH)
+
+        }
+
+    }, [BH])
 
     const handleLogin = async () => {
         if (bhId.trim() === "BH" || bhId.trim() === "") {
@@ -27,7 +40,7 @@ export default function Login() {
             setLoading(true)
             setError("")
             const response = await axios.post(`${API_URL_APP_LOCAL}/heavy/heavy-vehicle-login`, { Bh_Id: bhId })
-            console.log(response.data)
+
 
             if (response.data && response.data.success) {
                 setIsOtpSent(true)
@@ -65,8 +78,15 @@ export default function Login() {
 
             if (response.data && response.data.success) {
                 setLoginSuccess(true)
-                // Here you would typically store auth tokens and navigate to the next screen
+                const { token } = response.data | {}
+                setToken(token)
                 Alert.alert("Success", "Login successful!")
+                setTimeout(() => {
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Home' }],
+                    });
+                }, 1500);
             } else {
                 setError(response.data?.message || "Invalid OTP. Please try again.")
             }
