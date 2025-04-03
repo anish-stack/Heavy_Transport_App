@@ -17,6 +17,12 @@ import Profile from "./screen/Profile/Profile";
 import EditProfile from "./screen/Profile/Edit-Profile/EditProfile";
 import ServiceAreaChange from "./screen/Profile/Service-Area-Change/ServiceAreaChange";
 import ProfileVehiclesUpdate from "./screen/Profile/profile-vehicles/ProfileVehiclesUpdate";
+import { Upload_Docments } from "./screen/Profile/Upload_Docments/Upload_Docments";
+import RechargeHistoryScreen from "./screen/Profile/Recharge/RechargeHistoryScreen";
+import MakeRecharge from "./screen/Profile/Recharge/MakeRecharge";
+import ReferralHistory from "./screen/Profile/Refferal/ReferalHistory";
+import WithdrawScreen from "./screen/Profile/Recharge/Withdraw/Withdraw";
+import HelpScreen from "./screen/Help/HelpScreen";
 
 const Stack = createNativeStackNavigator();
 function LoadingScreen() {
@@ -156,6 +162,48 @@ function AppNavigator() {
           headerShown: false,
         }}
         component={ProfileVehiclesUpdate}
+      />
+      <Stack.Screen
+        name="Upload_Documents"
+        options={{
+          headerShown: false,
+        }}
+        component={Upload_Docments}
+      />
+      <Stack.Screen
+        name="Recharge"
+        options={{
+          headerShown: false,
+        }}
+        component={RechargeHistoryScreen}
+      />
+      <Stack.Screen
+        name="do_reacharge"
+        options={{
+          headerShown: false,
+        }}
+        component={MakeRecharge}
+      />
+      <Stack.Screen
+        name="Refferal"
+        options={{
+          headerShown: false,
+        }}
+        component={ReferralHistory}
+      />
+      <Stack.Screen
+        name="Withdraw"
+        options={{
+          headerShown: false,
+        }}
+        component={WithdrawScreen}
+      />
+      <Stack.Screen
+        name="Help"
+        options={{
+          headerShown: false,
+        }}
+        component={HelpScreen}
       />
     </Stack.Navigator>
   );

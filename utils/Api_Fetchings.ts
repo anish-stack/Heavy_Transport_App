@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from "axios";
-import { API_URL_APP_LOCAL } from "../constant/Api";
+import { API_URL_APP, API_URL_APP_LOCAL, API_URL_WEB } from "../constant/Api";
 
 interface Vehicle {
   id: string;
@@ -149,5 +149,23 @@ export const getMyProfile = async (token: token): Promise<RegisterRes> => {
   }
 };
 
-
-
+export const getMyProfileBhDetails = async (
+  BhId: token
+): Promise<RegisterRes> => {
+  try {
+    const response: AxiosResponse<RegisterRes> = await axios.post(
+      `${API_URL_WEB}/api/v1/getProviderDetailsByBhId`,
+      BhId
+    );
+    console.log(response.data);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message || "Failed to get profile Bh";
+    return Promise.reject({
+      success: false,
+      message: errorMessage,
+      data: error.response?.data || null,
+    });
+  }
+};

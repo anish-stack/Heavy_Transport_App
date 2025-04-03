@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import * as SecureStore from 'expo-secure-store'
-import { getMyProfile } from "../utils/Api_Fetchings";
+import { getMyProfile, getMyProfileBhDetails } from "../utils/Api_Fetchings";
 
 interface AuthContextType {
   token: string | null;
@@ -24,11 +24,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const loadToken = async () => {
       try {
-        
+
         const storedToken = await SecureStore.getItemAsync("authToken");
         if (storedToken) {
           setToken(storedToken);
           getProfile(storedToken)
+
         }
       } catch (error) {
         console.error("Failed to load token:", error);
@@ -71,14 +72,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const getProfile = async (tokenData) => {
     try {
-      const data = await getMyProfile({ token: tokenData })
-      setUser(data.data)
+      const data = await getMyProfile({ token: tokenData });
+
+      if (!data?.data) {
+        throw new Error("Profile data not found");
+      }
+
+      const BH_DETAILS = await getMyProfileBhDetails({ BhId: data?.data?.Bh_Id });
+   
+      const all_data = {
+        ...data.data,
+        BH_DETAILS: BH_DETAILS || {}
+      };
+      setUser(all_data);
     } catch (error) {
-      console.log("Failed to get profile:", error);
+      console.log("Failed to get profile:", error?.message || error);
     } finally {
       setLoading(false);
     }
-  }
+  };
+
 
 
   const isAuthenticated = !!token;

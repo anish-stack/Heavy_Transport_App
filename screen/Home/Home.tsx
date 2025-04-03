@@ -5,6 +5,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import Layout from '../../components/Layout/Layout';
 import { useAuth } from '../../context/AuthContext';
+import { COLORS } from '../../constant/Colors';
+import { Upload } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import { formatCurrency } from '../../utils/formatters';
 
 export const colors = {
   primary: '#2563EB',
@@ -33,31 +37,13 @@ interface ServiceArea {
 }
 
 export default function Home() {
-  // Added static states for Calls and Position
+
   const [callsReceived, setCallsReceived] = useState(23);
   const [appPosition, setAppPosition] = useState(42);
   const { user } = useAuth()
-  // const user = {
-  //   Bh_Id: "BH436459",
-  //   name: "Anish Jha",
-  //   email: "anishjha123456@gmail.com",
-  //   phone_number: "7217619794",
-  //   status: "Active",
-  //   call_timing: {
-  //     start_time: "12:00 AM",
-  //     end_time: "4:33 PM"
-  //   },
-  //   service_areas: [
-  //     { _id: "67ed19a5a54318a527484549", name: "Rohini, Delhi, India", location: {} },
-  //     { _id: "67ed19a5a54318a52748454a", name: "Naharpur, Naharpur Village, Rohini, Delhi, India", location: {} }
-  //   ],
-  //   vehicle_info: [
-  //     { _id: "67eba3b514d39d1d121a000c", name: "Flatbed Champion", vehicleType: "Big", isAvailable: true },
-  //     { _id: "67eba3b514d39d1d121a000d", name: "Lowbed Champion", vehicleType: "Big", isAvailable: true },
-  //     { _id: "67eba3bf14d39d1d121a0011", name: "Crane Trucks", vehicleType: "Big", isAvailable: true }
-  //   ]
-  // };
+  const navigation = useNavigation()
 
+ 
   const renderVehicleCard = (vehicle: Vehicle) => (
     <View key={vehicle._id} style={styles.vehicleCard}>
       <View style={styles.vehicleInfo}>
@@ -71,6 +57,7 @@ export default function Home() {
       </View>
     </View>
   );
+  // console.log()
 
   const renderServiceArea = (area: ServiceArea) => (
     <View key={area._id} style={styles.areaCard}>
@@ -81,6 +68,60 @@ export default function Home() {
 
   return (
     <Layout>
+      {(user?.documents.length === 0 || user?.documents.length < 6) && (
+        <TouchableOpacity
+          style={{
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            borderRadius: 20,
+            alignItems: "center",
+            justifyContent: "center",
+            margin: 10,
+            borderWidth: 1,
+            borderColor: COLORS.error,
+            display: "flex",
+            flexDirection: "row",
+            gap: 8,
+          }}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('Upload_Documents')}
+        >
+          <Upload color={COLORS.darkSecondary} />
+          <Text style={{ color: COLORS.darkSecondary, fontWeight: "bold" }}>
+            Please Upload Your Documents
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {user?.documents?.some((item) => item.document_status === 'Pending') && (
+        <TouchableOpacity
+          style={styles.commonButtonStyle}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('Upload_Documents')}
+        >
+          <Upload color={COLORS.darkSecondary} />
+          <Text style={{ color: COLORS.darkSecondary, fontWeight: "bold" }}>
+            Document verification is still pending. Please wait.
+          </Text>
+        </TouchableOpacity>
+      )}
+
+
+      {user?.documents.length === 6 && user.documents.some((item) => item.document_status === 'Rejected') && (
+        <TouchableOpacity
+          style={styles.commonButtonStyle}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('Upload_Documents')}
+        >
+          <Upload color={COLORS.darkSecondary} />
+          <Text style={{ color: COLORS.darkSecondary, fontWeight: "bold" }}>
+            One or more documents have been rejected. Please check and re-upload.
+          </Text>
+        </TouchableOpacity>
+      )}
+
+
+
       <View style={styles.header}>
         <View style={styles.profileSection}>
           <Image
@@ -88,11 +129,23 @@ export default function Home() {
             style={styles.profileImage}
           />
           <View style={styles.profileInfo}>
-            <Text style={styles.name}>{user?.name || "Guest"}</Text>
+
             <Text style={styles.partnerId}>Partner ID: {user?.Bh_Id || "ID"}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: colors.success + '20' }]}>
-              <Text style={[styles.statusText, { color: colors.success }]}>{user?.status || "Inactive"}</Text>
+            <Text style={styles.partnerId}>Category: {user?.BH_DETAILS?.data.category?.title || "ID"}</Text>
+            <Text style={styles.partnerId}>
+              Plan Expires At: {new Date(user?.BH_DETAILS?.data?.payment_id?.end_date).toLocaleDateString()}
+            </Text>
+            <View style={[styles.statusBadge, { backgroundColor: `${colors.success}20` }]}>
+              <Text style={[styles.statusText, { color: colors.success }]}>
+                {user?.BH_DETAILS?.data?.isFreePlanActive ? "You're in Free Trial Upto One Year" : "Inactive"}
+              </Text>
             </View>
+
+            <View style={[styles.statusBadge, { backgroundColor: colors.success + '20' }]}>
+              <Text style={[styles.statusText, { color: colors.success }]}>Account Status :- {user?.status || "Inactive"}</Text>
+            </View>
+
+
           </View>
         </View>
       </View>
@@ -106,8 +159,10 @@ export default function Home() {
         </View>
         <View style={styles.statCard}>
           <Ionicons name="car" size={scale(20)} color={colors.primary} />
-          <Text style={styles.statTitle}>Total Vehicles</Text>
-          <Text style={styles.statValue}>{user?.vehicle_info?.length}</Text>
+          <Text style={styles.statTitle}>Money Earned Through Referral</Text>
+
+
+          <Text style={styles.statValue}>{formatCurrency(user?.BH_DETAILS.data.wallet) || 0}</Text>
         </View>
       </View>
 
@@ -254,6 +309,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: scale(10),
     paddingVertical: verticalScale(4),
+    marginBottom: verticalScale(4),
     borderRadius: scale(16),
   },
   statusText: {
@@ -281,4 +337,17 @@ const styles = StyleSheet.create({
     marginLeft: scale(8),
     flex: 1,
   },
+  commonButtonStyle: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    margin: 10,
+    borderWidth: 1,
+    borderColor: COLORS.error,
+    display: "flex",
+    flexDirection: "row",
+    gap: 8,
+  }
 });

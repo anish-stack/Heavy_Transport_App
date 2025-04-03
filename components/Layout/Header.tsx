@@ -21,7 +21,7 @@ interface HeaderProps {
 }
 
 export default function Header({ name, onMenuPress }: HeaderProps) {
-    console.log("onMenuPress",onMenuPress)
+
     return (
         <View style={styles.container}>
             <TouchableOpacity
@@ -30,8 +30,8 @@ export default function Header({ name, onMenuPress }: HeaderProps) {
                 <Ionicons name="menu" size={24} color={colors.black} />
             </TouchableOpacity>
             <View style={styles.titleContainer}>
-                <Text style={styles.name}>Welcome back at Olyox</Text>
-                {/* <Text style={styles.name}>{name}</Text> */}
+                <Text >Welcome </Text>
+                <Text style={styles.name}>{name}</Text>
             </View>
             <TouchableOpacity style={styles.notificationButton}>
                 <View style={styles.notificationBadge}>
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
         color: colors.gray,
     },
     name: {
-        fontSize: 18,
+        fontSize: 14,
         fontWeight: '600',
         color: colors.black,
     },
