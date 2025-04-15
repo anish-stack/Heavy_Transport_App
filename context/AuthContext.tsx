@@ -84,6 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...data.data,
         BH_DETAILS: BH_DETAILS || {}
       };
+     
       setUser(all_data);
     } catch (error) {
       console.log("Failed to get profile:", error?.message || error);

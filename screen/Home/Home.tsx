@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -40,10 +40,10 @@ export default function Home() {
 
   const [callsReceived, setCallsReceived] = useState(23);
   const [appPosition, setAppPosition] = useState(42);
-  const { user } = useAuth()
+  const { user, getToken } = useAuth()
   const navigation = useNavigation()
 
- 
+
   const renderVehicleCard = (vehicle: Vehicle) => (
     <View key={vehicle._id} style={styles.vehicleCard}>
       <View style={styles.vehicleInfo}>
@@ -57,7 +57,7 @@ export default function Home() {
       </View>
     </View>
   );
-  // console.log()
+
 
   const renderServiceArea = (area: ServiceArea) => (
     <View key={area._id} style={styles.areaCard}>
@@ -65,6 +65,10 @@ export default function Home() {
       <Text style={styles.areaText}>{area.name}</Text>
     </View>
   );
+
+  useEffect(() => {
+    getToken()
+  }, [])
 
   return (
     <Layout>
