@@ -60,14 +60,17 @@ const MakeRechargeScreen = () => {
       setLoading(true)
       const { data } = await axios.get(`${API_URL_WEB}/api/v1/membership-plans`)
 
+   
+      const filter = data.data.filter((item)=> item.category === 'transport')
+      console.log(filter)
       // Add some features to each plan for better UI
-      const enhancedPlans = data.data.map((plan) => ({
+      const enhancedPlans = filter.map((plan) => ({
         ...plan,
         features: [
           `Valid for ${plan.validityDays} ${plan.whatIsThis}`,
           "Unlimited bookings",
           "Priority customer support",
-          "Cancel anytime",
+     
         ],
       }))
 
@@ -136,7 +139,7 @@ const MakeRechargeScreen = () => {
 
     try {
       const response = await axios.get(
-        `http://192.168.1.26:3100/api/v1/rider/recharge-wallet/${selectedPlan._id}/${user.BH_DETAILS?.BH_ID}`,
+        `http://192.168.1.11:3100/api/v1/rider/recharge-wallet/${selectedPlan._id}/${user.BH_DETAILS?.BH_ID}`,
       )
 
       if (!response.data || !response.data.order) {
@@ -147,7 +150,9 @@ const MakeRechargeScreen = () => {
         description: `${selectedPlan.title} Membership`,
         image: "https://www.olyox.com/assets/logo-CWkwXYQ_.png",
         currency: response.data.order.currency,
-        key: "rzp_live_zD1yAIqb2utRwp",
+        // key: "rzp_live_zD1yAIqb2utRwp",
+        key: "rzp_test_7atYe4nCssW6Po",
+
         amount: response.data.order.amount,
         name: "Olyox",
         order_id: response.data.order.id,
@@ -161,7 +166,7 @@ const MakeRechargeScreen = () => {
 
       const paymentResponse = await RazorpayCheckout.open(options)
 
-      const verifyResponse = await axios.post(`http://192.168.1.26:3100/api/v1/rider/recharge-verify/${user?.BH_ID}`, {
+      const verifyResponse = await axios.post(`http://192.168.1.11:3100/api/v1/rider/recharge-verify/${user?.BH_ID}`, {
         razorpay_order_id: paymentResponse.razorpay_order_id,
         razorpay_payment_id: paymentResponse.razorpay_payment_id,
         razorpay_signature: paymentResponse.razorpay_signature,
@@ -213,6 +218,9 @@ const MakeRechargeScreen = () => {
             <View style={styles.planContent}>
               <Text style={styles.validityText}>
                 {plan.validityDays} {plan.whatIsThis} membership
+              </Text>
+              <Text style={[styles.validityText,{fontSize:12}]}>
+                {plan?.description}
               </Text>
 
               {plan.features?.map((feature, idx) => (

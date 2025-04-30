@@ -136,7 +136,7 @@ export const getMyProfile = async (token: token): Promise<RegisterRes> => {
         headers: { Authorization: `Bearer ${token?.token}` },
       }
     );
-    console.log(response.data);
+    console.log("Hello ",response.data);
     return response.data;
   } catch (error: any) {
     const errorMessage =
@@ -157,7 +157,7 @@ export const getMyProfileBhDetails = async (
       `${API_URL_WEB}/api/v1/getProviderDetailsByBhId`,
       BhId
     );
-    console.log(response.data);
+ 
     return response.data;
   } catch (error: any) {
     const errorMessage =

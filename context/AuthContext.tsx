@@ -18,6 +18,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setTokenState] = useState<string | null>(null);
   const [user, setUser] = useState<null>(null);
+  const [appUser, setAppUser] = useState<null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
 
@@ -77,6 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!data?.data) {
         throw new Error("Profile data not found");
       }
+      setAppUser(data?.data)
 
       const BH_DETAILS = await getMyProfileBhDetails({ BhId: data?.data?.Bh_Id });
    
@@ -98,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAuthenticated = !!token;
 
   return (
-    <AuthContext.Provider value={{ token, setToken, deleteToken, updateToken, getToken, isAuthenticated, loading, user }}>
+    <AuthContext.Provider value={{ token,appUser, setToken, deleteToken, updateToken, getToken, isAuthenticated, loading, user }}>
       {children}
     </AuthContext.Provider>
   );

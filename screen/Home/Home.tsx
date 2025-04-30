@@ -1,14 +1,16 @@
+
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { Ionicons } from '@expo/vector-icons';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 import Layout from '../../components/Layout/Layout';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constant/Colors';
-import { Upload } from 'lucide-react-native';
+
 import { useNavigation } from '@react-navigation/native';
 import { formatCurrency } from '../../utils/formatters';
+import useCallAndMessage from '../../hooks/GetCallAndMessage.hook';
 
 export const colors = {
   primary: '#2563EB',
@@ -38,9 +40,10 @@ interface ServiceArea {
 
 export default function Home() {
 
-  const [callsReceived, setCallsReceived] = useState(23);
-  const [appPosition, setAppPosition] = useState(42);
-  const { user, getToken } = useAuth()
+  const [refreshDone,setRefreshDone] = useState(false)
+
+  const { user, getToken ,appUser } = useAuth()
+  const {message,calls,refresh} = useCallAndMessage()
   const navigation = useNavigation()
 
 
@@ -57,6 +60,12 @@ export default function Home() {
       </View>
     </View>
   );
+  const handleRefreshFromHome = () => {
+    console.log('Refresh triggered from Layout!',calls.length);
+    refresh()
+    setRefreshDone(prev => !prev); // Toggle to re-trigger useEffects if needed
+    // You can also refresh your data here
+  };
 
 
   const renderServiceArea = (area: ServiceArea) => (
@@ -71,7 +80,7 @@ export default function Home() {
   }, [])
 
   return (
-    <Layout>
+    <Layout onRefresh={handleRefreshFromHome}>
       {(user?.documents.length === 0 || user?.documents.length < 6) && (
         <TouchableOpacity
           style={{
@@ -90,7 +99,7 @@ export default function Home() {
           activeOpacity={0.7}
           onPress={() => navigation.navigate('Upload_Documents')}
         >
-          <Upload color={COLORS.darkSecondary} />
+          {/* <Upload color={COLORS.darkSecondary} /> */}
           <Text style={{ color: COLORS.darkSecondary, fontWeight: "bold" }}>
             Please Upload Your Documents
           </Text>
@@ -103,7 +112,7 @@ export default function Home() {
           activeOpacity={0.7}
           onPress={() => navigation.navigate('Upload_Documents')}
         >
-          <Upload color={COLORS.darkSecondary} />
+          {/* <Upload color={COLORS.darkSecondary} /> */}
           <Text style={{ color: COLORS.darkSecondary, fontWeight: "bold" }}>
             Document verification is still pending. Please wait.
           </Text>
@@ -117,7 +126,7 @@ export default function Home() {
           activeOpacity={0.7}
           onPress={() => navigation.navigate('Upload_Documents')}
         >
-          <Upload color={COLORS.darkSecondary} />
+          {/* <Upload color={COLORS.darkSecondary} /> */}
           <Text style={{ color: COLORS.darkSecondary, fontWeight: "bold" }}>
             One or more documents have been rejected. Please check and re-upload.
           </Text>
@@ -137,13 +146,16 @@ export default function Home() {
             <Text style={styles.partnerId}>Partner ID: {user?.Bh_Id || "ID"}</Text>
             <Text style={styles.partnerId}>Category: {user?.BH_DETAILS?.data.category?.title || "ID"}</Text>
             <Text style={styles.partnerId}>
-              Plan Expires At: {new Date(user?.BH_DETAILS?.data?.payment_id?.end_date).toLocaleDateString()}
+              Plan Expires At: {new Date(user?.RechargeData?.expireData).toLocaleDateString()}
             </Text>
-            <View style={[styles.statusBadge, { backgroundColor: `${colors.success}20` }]}>
-              <Text style={[styles.statusText, { color: colors.success }]}>
-                {user?.BH_DETAILS?.data?.isFreePlanActive ? "You're in Free Trial Upto One Year" : "Inactive"}
-              </Text>
-            </View>
+            {appUser?.isFreeMember && 
+                <View style={[styles.statusBadge, { backgroundColor: `${colors.success}20` }]}>
+                <Text style={[styles.statusText, { color: colors.success }]}>
+                  {appUser?.isFreeMember && "You're in Free Trial Upto One Year" }
+                </Text>
+              </View>
+            }
+        
 
             <View style={[styles.statusBadge, { backgroundColor: colors.success + '20' }]}>
               <Text style={[styles.statusText, { color: colors.success }]}>Account Status :- {user?.status || "Inactive"}</Text>
@@ -172,16 +184,16 @@ export default function Home() {
 
       {/* Added new stats section for Calls and Position */}
       <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
+        <TouchableOpacity activeOpacity={0.7} onPress={()=>navigation.navigate('request-for-you',{type:'call'})} style={styles.statCard}>
           <Ionicons name="call" size={scale(20)} color={colors.primary} />
           <Text style={styles.statTitle}>Calls You Get</Text>
-          <Text style={styles.statValue}>{callsReceived} this month</Text>
-        </View>
-        <View style={styles.statCard}>
+          <Text style={styles.statValue}>{calls?.length || 0} this month</Text>
+        </TouchableOpacity>
+        <TouchableOpacity activeOpacity={0.7} onPress={()=>navigation.navigate('request-for-you',{type:'message'})} style={styles.statCard}>
           <Ionicons name="trophy" size={scale(20)} color={colors.warning} />
-          <Text style={styles.statTitle}>Position On App</Text>
-          <Text style={styles.statValue}>#{appPosition} in Delhi</Text>
-        </View>
+          <Text style={styles.statTitle}>Message You Get</Text>
+          <Text style={styles.statValue}>#{message.length || 0} in Delhi</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Vehicles Section */}

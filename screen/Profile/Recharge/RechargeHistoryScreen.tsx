@@ -44,6 +44,7 @@ export default function RechargeHistoryScreen() {
       const data = await fetchRechargeHistory();
       setRechargeData(data);
     } catch (err) {
+      console,log(err.response.data)
       setError(err instanceof Error ? err.message : 'Failed to fetch recharge history.');
     } finally {
       setLoading(false);

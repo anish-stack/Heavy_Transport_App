@@ -1,8 +1,9 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
+import 'react-native-gesture-handler';
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-
+import { enableScreens } from 'react-native-screens';
 import Onboarding from "./screen/onboarding/Onboarding";
 import Home from "./screen/Home/Home";
 import Bh_Verification from "./screen/auth/BH_Steps/Bh_Verification";
@@ -23,8 +24,10 @@ import MakeRecharge from "./screen/Profile/Recharge/MakeRecharge";
 import ReferralHistory from "./screen/Profile/Refferal/ReferalHistory";
 import WithdrawScreen from "./screen/Profile/Recharge/Withdraw/Withdraw";
 import HelpScreen from "./screen/Help/HelpScreen";
+import Request from "./screen/requests/Request";
 
 const Stack = createNativeStackNavigator();
+enableScreens();
 function LoadingScreen() {
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -204,6 +207,19 @@ function AppNavigator() {
           headerShown: false,
         }}
         component={HelpScreen}
+      />
+       <Stack.Screen
+        name="request-for-you"
+        options={{
+          headerShown: true,
+          title: "Request For You",
+          headerTitleStyle: {
+            fontSize: 16,
+            fontWeight: "bold",
+            color: "#000",
+          },
+        }}
+        component={Request}
       />
     </Stack.Navigator>
   );

@@ -20,7 +20,7 @@ export default function Layout({ children, onRefresh ,isHeaderShow=true,isBottom
       
             // Call the onRefresh prop if provided
             if (typeof onRefresh === 'function') {
-                await onRefresh();
+             onRefresh(true);
                
             }
         } catch (error) {

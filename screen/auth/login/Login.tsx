@@ -14,7 +14,7 @@ export default function Login() {
     const { BH } = route.params || {}
 
     const [otpType, setOtpType] = useState('text')
-    const [bhId, setBhId] = useState("BH787062")
+    const [bhId, setBhId] = useState("BH881763")
     const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState<string>("")
     const [otp, setOtp] = useState<string>("")
