@@ -1,7 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../context/AuthContext';
 
 export const colors = {
     primary: '#2563EB',
@@ -38,6 +39,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose, name, email }: SidebarProps) {
     const navigation = useNavigation();
+    const { deleteToken } = useAuth()
     const translateX = useRef(new Animated.Value(-300)).current;
     const overlayOpacity = useRef(new Animated.Value(0)).current;
 
@@ -63,6 +65,18 @@ export default function Sidebar({ isOpen, onClose, name, email }: SidebarProps) 
             onClose();
         }
     };
+
+    const handleLogout = async () => {
+        await deleteToken()
+        navigation.dispatch(
+            CommonActions.reset({
+                index: 0,
+                routes: [
+                    { name: 'login' },
+                ],
+            })
+        );
+    }
 
     if (!isOpen) {
         return null;
@@ -110,7 +124,7 @@ export default function Sidebar({ isOpen, onClose, name, email }: SidebarProps) 
                     ))}
                 </View>
 
-                <TouchableOpacity style={styles.logoutButton}>
+                <TouchableOpacity onPress={() => handleLogout()} style={styles.logoutButton}>
                     <Ionicons name="log-out" size={24} color={colors.error} />
                     <Text style={[styles.menuText, { color: colors.error }]}>Logout</Text>
                 </TouchableOpacity>

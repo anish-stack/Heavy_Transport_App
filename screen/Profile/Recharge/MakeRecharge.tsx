@@ -136,7 +136,7 @@ const MakeRechargeScreen = () => {
 
     try {
       const response = await axios.get(
-        `https://demoapi.olyox.com/api/v1/rider/recharge-wallet/${selectedPlan._id}/${user.BH_DETAILS?.BH_ID}`,
+        `http://192.168.1.26:3100/api/v1/rider/recharge-wallet/${selectedPlan._id}/${user.BH_DETAILS?.BH_ID}`,
       )
 
       if (!response.data || !response.data.order) {
@@ -161,7 +161,7 @@ const MakeRechargeScreen = () => {
 
       const paymentResponse = await RazorpayCheckout.open(options)
 
-      const verifyResponse = await axios.post(`https://demoapi.olyox.com/api/v1/rider/recharge-verify/${user?.BH_ID}`, {
+      const verifyResponse = await axios.post(`http://192.168.1.26:3100/api/v1/rider/recharge-verify/${user?.BH_ID}`, {
         razorpay_order_id: paymentResponse.razorpay_order_id,
         razorpay_payment_id: paymentResponse.razorpay_payment_id,
         razorpay_signature: paymentResponse.razorpay_signature,

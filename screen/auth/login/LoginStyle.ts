@@ -98,6 +98,40 @@ const styles = StyleSheet.create({
     color: COLORS.dark,
     textAlign: "center",
   },
+  optionButton: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginVertical: 8,
+    width: '80%',
+    alignItems: 'center',
+  },
+  selectedButton: {
+    backgroundColor: '#0d6efd',
+    borderColor: '#0d6efd',
+  },
+  optionText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  selectedText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  sendButton: {
+    marginTop: 20,
+    backgroundColor: '#00aaa9',
+    padding: 14,
+    borderRadius: 8,
+    width: '80%',
+    alignItems: 'center',
+  },
+  sendButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 })
 
 export default styles

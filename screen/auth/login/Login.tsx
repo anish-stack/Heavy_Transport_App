@@ -13,7 +13,8 @@ export default function Login() {
     const route = useRoute()
     const { BH } = route.params || {}
 
-    const [bhId, setBhId] = useState("BH436459")
+    const [otpType, setOtpType] = useState('text')
+    const [bhId, setBhId] = useState("BH787062")
     const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState<string>("")
     const [otp, setOtp] = useState<string>("")
@@ -39,7 +40,7 @@ export default function Login() {
         try {
             setLoading(true)
             setError("")
-            const response = await axios.post(`${API_URL_APP_LOCAL}/heavy/heavy-vehicle-login`, { Bh_Id: bhId })
+            const response = await axios.post(`${API_URL_APP_LOCAL}/heavy/heavy-vehicle-login`, { Bh_Id: bhId, msgType: otpType })
 
 
             if (response.data && response.data.success) {
@@ -52,10 +53,11 @@ export default function Login() {
 
             if (error?.response?.status === 403) {
                 const data = error?.response?.data?.information || {}
-                console.error("data", data)
+               
                 navigation.navigate('Complete_Profile', { data: { ...data, bhId } })
                 setError(error.response?.data?.message || "Failed to login. Please try again.")
             }
+            console.log(error.response?.data)
             setError(error.response?.data?.message || "Failed to login. Please try again.")
         } finally {
             setLoading(false)
@@ -76,9 +78,9 @@ export default function Login() {
                 otp: Number.parseInt(otp),
             })
 
-            console.log(response.data.success)
-            console.log(response.data.token)
-            console.log(response.data)
+            // console.log(response.data.success)
+            // console.log(response.data.token)
+            // console.log(response.data)
             if (response.data && response.data.success) {
                 console.log(response.data.token)
                 setLoginSuccess(true)
@@ -101,6 +103,7 @@ export default function Login() {
             setLoading(false)
         }
     }
+   
 
     const handleResendOtp = async () => {
         try {
@@ -123,13 +126,66 @@ export default function Login() {
 
     const renderLoginForm = () => (
         <View style={styles.formContainer}>
+
+            {/* OTP Type Buttons Row */}
+            <View style={{
+               
+                marginBottom: 20,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                gap: 10,
+            }}>
+                <TouchableOpacity
+                    onPress={() => setOtpType('text')}
+                    style={{
+                        flex: 1,
+                        padding: 5,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: otpType === 'text' ? '#0d6efd' : '#ccc',
+                        backgroundColor: otpType === 'text' ? '#0d6efd' : '#fff',
+                        alignItems: 'center',
+                    }}
+                >
+                    <Text style={{
+                        color: otpType === 'text' ? '#fff' : '#333',
+                        fontWeight: otpType === 'text' ? 'bold' : 'normal'
+                    }}>
+                        Text Message
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    onPress={() => setOtpType('whatsapp')}
+                    style={{
+                        flex: 1,
+                        padding: 5,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: otpType === 'whatsapp' ? '#0d6efd' : '#ccc',
+                        backgroundColor: otpType === 'whatsapp' ? '#0d6efd' : '#fff',
+                        alignItems: 'center',
+                    }}
+                >
+                    <Text style={{
+                        color: otpType === 'whatsapp' ? '#fff' : '#333',
+                        fontWeight: otpType === 'whatsapp' ? 'bold' : 'normal'
+                    }}>
+                        WhatsApp Message
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* BH ID Input */}
             <FormInput
                 label="Enter Your BH ID"
                 value={bhId}
                 onChangeText={setBhId}
                 placeholder="Enter your BH ID"
-                keyboardType={"numeric"}
+                keyboardType="numeric"
             />
+
+            {/* Send OTP Button */}
             <TouchableOpacity
                 style={[styles.button, loading && styles.disabledButton]}
                 onPress={handleLogin}
@@ -142,7 +198,8 @@ export default function Login() {
                 )}
             </TouchableOpacity>
         </View>
-    )
+    );
+
 
     const renderOtpForm = () => (
         <View style={styles.formContainer}>

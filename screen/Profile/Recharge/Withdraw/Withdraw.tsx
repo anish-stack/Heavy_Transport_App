@@ -124,7 +124,7 @@ export default function WithdrawScreen() {
 
         setLoading(true);
         try {
-            await axios.post(`https://api.olyox.com/api/v1/create-withdrawal?_id=${user.BH_DETAILS?.data?._id}`, withdrawForm);
+            await axios.post(`https://www.webapi.olyox.com/api/v1/create-withdrawal?_id=${user.BH_DETAILS?.data?._id}`, withdrawForm);
 
             Alert.alert('Success', 'Withdrawal request submitted successfully');
             setModalVisible(false);

@@ -376,7 +376,7 @@ export default function CompleteProfile() {
             ) : null}
 
             <View style={styles.formSection}>
-                <Text style={styles.sectionTitle}>Basic Information</Text>
+                <Text style={styles.sectionTitle}>Basic Information (Not Editable) </Text>
 
                 <FormInput
                     label="BH ID"
@@ -390,6 +390,7 @@ export default function CompleteProfile() {
                 <FormInput
                     label="Full Name"
                     value={formData.name}
+                    editable={!name}
                     onChangeText={(text) => setFormData({ ...formData, name: text })}
                     placeholder="Enter your full name"
                     leftIcon={<MaterialIcons name="person" size={20} color="#0056b3" />}
@@ -400,6 +401,7 @@ export default function CompleteProfile() {
                     value={formData.email}
                     onChangeText={(text) => setFormData({ ...formData, email: text })}
                     placeholder="Enter your email"
+                    editable={!email}
                     keyboardType="email-address"
                     leftIcon={<MaterialIcons name="email" size={20} color="#0056b3" />}
                 />
@@ -410,6 +412,7 @@ export default function CompleteProfile() {
                     onChangeText={(text) => setFormData({ ...formData, phone_number: text })}
                     placeholder="Enter your phone number"
                     keyboardType="phone-pad"
+                    editable={!phone_number}
                     leftIcon={<MaterialIcons name="phone" size={20} color="#0056b3" />}
                 />
             </View>

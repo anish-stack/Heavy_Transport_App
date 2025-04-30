@@ -9,12 +9,13 @@ import {
     StyleSheet,
     ActivityIndicator
 } from "react-native";
-import { useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute ,CommonActions } from "@react-navigation/native";
 import { resendOtpPartner, VerifyOtpOfPartner } from "../../../utils/Api_Fetchings";
 import { useAuth } from "../../../context/AuthContext";
 
 export default function VerifyCompleteProfileOtp() {
     const route = useRoute();
+    const navigation  = useNavigation()
     const { phone_number } = route.params || {};
     const [otp, setOtp] = useState<string>("");
     const { setToken, token } = useAuth()
@@ -36,6 +37,15 @@ export default function VerifyCompleteProfileOtp() {
             } else {
                 throw new Error(response.message);
             }
+            setTimeout(() => {
+                navigation.dispatch(
+                    CommonActions.reset({
+                        index: 0,
+                        routes: [{ name: 'Home' }]
+                    })
+                );
+            }, 3000);
+            
         } catch (error: any) {
             Alert.alert("Error", error.message || "Failed to verify OTP.");
         } finally {
@@ -43,7 +53,7 @@ export default function VerifyCompleteProfileOtp() {
         }
     };
 
-    console.log("Save", token)
+  
 
     const handleResendOtp = async () => {
         try {

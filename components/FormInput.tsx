@@ -8,6 +8,7 @@ interface FormInputProps {
   value: string;
   onChangeText: (text: string) => void;
   error?: string;
+  editable?:boolean;
   placeholder?: string;
   secureTextEntry?: boolean;
   keyboardType?: KeyboardTypeOptions;
@@ -21,6 +22,7 @@ export default function FormInput({
   error,
   placeholder,
   secureTextEntry,
+  editable,
   keyboardType = 'default'
 }: FormInputProps) {
   return (
@@ -32,6 +34,7 @@ export default function FormInput({
           style={styles.input}
           value={value}
           onChangeText={onChangeText}
+          editable={editable}
           placeholder={placeholder}
           placeholderTextColor={COLORS.lightDark}
           secureTextEntry={secureTextEntry}
