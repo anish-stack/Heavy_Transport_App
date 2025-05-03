@@ -2,23 +2,30 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import React from 'react';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { COLORS, Sizes } from '../../constant/Colors';
+import { useNavigation } from '@react-navigation/native';
 
 export default function BottomBar() {
+    const navigation = useNavigation()
     return (
         <View style={styles.bottomBar}>
-            <TouchableOpacity style={styles.bottomBarItem}>
+            <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.bottomBarItem}>
                 <Icon name="home" size={Sizes.iconSizeMedium} color={COLORS.white} />
                 <Text style={styles.bottomBarText}>Home</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.bottomBarItem}>
-                <Icon name="search" size={Sizes.iconSizeMedium} color={COLORS.white} />
-                <Text style={styles.bottomBarText}>Search</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Recharge')} style={styles.bottomBarItem}>
+                <Icon name="card-outline" size={Sizes.iconSizeMedium} color={COLORS.white} />
+                <Text style={styles.bottomBarText}>Recharge</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.bottomBarItem}>
-                <Icon name="add" size={Sizes.iconSizeMedium} color={COLORS.white} />
-                <Text style={styles.bottomBarText}>Add</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('unlock-coupons')} style={styles.bottomBarItem}>
+                <Icon name="gift" size={Sizes.iconSizeMedium} color={COLORS.white} />
+                <Text style={styles.bottomBarText}>Unlock Coupons</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.bottomBarItem}>
+
+            <TouchableOpacity onPress={() => navigation.navigate('request-for-you')} style={styles.bottomBarItem}>
+                <Icon name="call" size={Sizes.iconSizeMedium} color={COLORS.white} />
+                <Text style={styles.bottomBarText}>Calls</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.bottomBarItem}>
                 <Icon name="person" size={Sizes.iconSizeMedium} color={COLORS.white} />
                 <Text style={styles.bottomBarText}>Profile</Text>
             </TouchableOpacity>

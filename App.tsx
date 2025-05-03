@@ -3,7 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import 'react-native-gesture-handler';
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { enableScreens } from 'react-native-screens';
+// import { enableScreens } from 'react-native-screens';
 import Onboarding from "./screen/onboarding/Onboarding";
 import Home from "./screen/Home/Home";
 import Bh_Verification from "./screen/auth/BH_Steps/Bh_Verification";
@@ -25,9 +25,11 @@ import ReferralHistory from "./screen/Profile/Refferal/ReferalHistory";
 import WithdrawScreen from "./screen/Profile/Recharge/Withdraw/Withdraw";
 import HelpScreen from "./screen/Help/HelpScreen";
 import Request from "./screen/requests/Request";
+import UnlockCoupons from "./screen/Profile/unlockcoupons/UnlockCoupons";
+import ErrorBoundaryWrapper from "./context/ErrorWrapper";
 
 const Stack = createNativeStackNavigator();
-enableScreens();
+// enableScreens();
 function LoadingScreen() {
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -208,7 +210,7 @@ function AppNavigator() {
         }}
         component={HelpScreen}
       />
-       <Stack.Screen
+      <Stack.Screen
         name="request-for-you"
         options={{
           headerShown: true,
@@ -221,18 +223,33 @@ function AppNavigator() {
         }}
         component={Request}
       />
+      <Stack.Screen
+        name="unlock-coupons"
+        options={{
+          headerShown: true,
+          title: "Claim Your Coupons",
+          headerTitleStyle: {
+            fontSize: 16,
+            fontWeight: "bold",
+            color: "#000",
+          },
+        }}
+        component={UnlockCoupons}
+      />
     </Stack.Navigator>
   );
 }
 
 export default function App() {
   return (
-    <AuthProvider>
-      <SafeAreaProvider>
-        <NavigationContainer>
-          <AppNavigator />
-        </NavigationContainer>
-      </SafeAreaProvider>
-    </AuthProvider>
+    <ErrorBoundaryWrapper>
+      <AuthProvider>
+        <SafeAreaProvider>
+          <NavigationContainer>
+            <AppNavigator />
+          </NavigationContainer>
+        </SafeAreaProvider>
+      </AuthProvider>
+    </ErrorBoundaryWrapper>
   );
 }

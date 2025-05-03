@@ -57,7 +57,7 @@ export default function Login() {
                 navigation.navigate('Complete_Profile', { data: { ...data, bhId } })
                 setError(error.response?.data?.message || "Failed to login. Please try again.")
             }
-            console.log(error.response?.data)
+            console.log(error.response)
             setError(error.response?.data?.message || "Failed to login. Please try again.")
         } finally {
             setLoading(false)

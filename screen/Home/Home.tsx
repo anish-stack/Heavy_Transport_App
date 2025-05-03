@@ -40,10 +40,10 @@ interface ServiceArea {
 
 export default function Home() {
 
-  const [refreshDone,setRefreshDone] = useState(false)
+  const [refreshDone, setRefreshDone] = useState(false)
 
-  const { user, getToken ,appUser } = useAuth()
-  const {message,calls,refresh} = useCallAndMessage()
+  const { user, getToken, appUser } = useAuth()
+  const { message, calls, refresh } = useCallAndMessage()
   const navigation = useNavigation()
 
 
@@ -61,7 +61,7 @@ export default function Home() {
     </View>
   );
   const handleRefreshFromHome = () => {
-    console.log('Refresh triggered from Layout!',calls.length);
+    console.log('Refresh triggered from Layout!', calls.length);
     refresh()
     setRefreshDone(prev => !prev); // Toggle to re-trigger useEffects if needed
     // You can also refresh your data here
@@ -138,7 +138,7 @@ export default function Home() {
       <View style={styles.header}>
         <View style={styles.profileSection}>
           <Image
-            source={{ uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400' }}
+            source={{ uri: user?.profile_image ? user?.profile_image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400' }}
             style={styles.profileImage}
           />
           <View style={styles.profileInfo}>
@@ -148,14 +148,14 @@ export default function Home() {
             <Text style={styles.partnerId}>
               Plan Expires At: {new Date(user?.RechargeData?.expireData).toLocaleDateString()}
             </Text>
-            {appUser?.isFreeMember && 
-                <View style={[styles.statusBadge, { backgroundColor: `${colors.success}20` }]}>
+            {appUser?.isFreeMember &&
+              <View style={[styles.statusBadge, { backgroundColor: `${colors.success}20` }]}>
                 <Text style={[styles.statusText, { color: colors.success }]}>
-                  {appUser?.isFreeMember && "You're in Free Trial Upto One Year" }
+                  {appUser?.isFreeMember && "You're in Free Trial Upto One Year"}
                 </Text>
               </View>
             }
-        
+
 
             <View style={[styles.statusBadge, { backgroundColor: colors.success + '20' }]}>
               <Text style={[styles.statusText, { color: colors.success }]}>Account Status :- {user?.status || "Inactive"}</Text>
@@ -184,15 +184,15 @@ export default function Home() {
 
       {/* Added new stats section for Calls and Position */}
       <View style={styles.statsContainer}>
-        <TouchableOpacity activeOpacity={0.7} onPress={()=>navigation.navigate('request-for-you',{type:'call'})} style={styles.statCard}>
+        <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('request-for-you', { type: 'call' })} style={styles.statCard}>
           <Ionicons name="call" size={scale(20)} color={colors.primary} />
           <Text style={styles.statTitle}>Calls You Get</Text>
           <Text style={styles.statValue}>{calls?.length || 0} this month</Text>
         </TouchableOpacity>
-        <TouchableOpacity activeOpacity={0.7} onPress={()=>navigation.navigate('request-for-you',{type:'message'})} style={styles.statCard}>
+        <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('request-for-you', { type: 'message' })} style={styles.statCard}>
           <Ionicons name="trophy" size={scale(20)} color={colors.warning} />
           <Text style={styles.statTitle}>Message You Get</Text>
-          <Text style={styles.statValue}>#{message.length || 0} in Delhi</Text>
+          <Text style={styles.statValue}>#{message.length || 0} in By User</Text>
         </TouchableOpacity>
       </View>
 

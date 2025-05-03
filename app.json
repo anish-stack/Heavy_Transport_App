@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "heavy_vehicle",
+    "name": "Olyox Transport",
     "slug": "heavy_vehicle",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -26,9 +26,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-secure-store"
-    ],
+    "plugins": ["expo-secure-store"],
     "extra": {
       "eas": {
         "projectId": "b720f897-b3a2-4aff-a36c-cb31155ebd13"

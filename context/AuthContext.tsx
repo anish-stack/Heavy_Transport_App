@@ -57,6 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await SecureStore.deleteItemAsync("authToken");
     setUser(null);
     setTokenState(null);
+   
   };
 
   const updateToken = async (newToken: string) => {

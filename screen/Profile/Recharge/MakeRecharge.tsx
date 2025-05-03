@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect, useCallback } from "react"
 import {
   View,
@@ -13,6 +11,7 @@ import {
   ActivityIndicator,
   Modal,
   StatusBar,
+  TextInput,
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useNavigation } from "@react-navigation/native"
@@ -23,10 +22,10 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons"
 import LottieView from "lottie-react-native"
 import { useAuth } from "../../../context/AuthContext"
 import { API_URL_APP, API_URL_WEB } from "../../../constant/Api"
-
+import useGetCoupons from "../../../hooks/GetUnlockCopons"
 
 const { width } = Dimensions.get("window")
-const CARD_WIDTH = width * 0.85
+const CARD_WIDTH = width * 0.95
 
 interface MembershipPlan {
   _id: string
@@ -44,6 +43,7 @@ type PaymentStatus = "idle" | "loading" | "success" | "failed" | "cancelled"
 const MakeRechargeScreen = () => {
   const navigation = useNavigation()
   const { user, getToken: refreshUserData } = useAuth()
+  const { coupons, loading: couponsLoading, refresh: refreshCoupons } = useGetCoupons()
 
   // State
   const [refreshing, setRefreshing] = useState(false)
@@ -53,6 +53,11 @@ const MakeRechargeScreen = () => {
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("idle")
   const [statusMessage, setStatusMessage] = useState("")
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showCouponModal, setShowCouponModal] = useState(false)
+  const [couponCode, setCouponCode] = useState("")
+  const [appliedCoupon, setAppliedCoupon] = useState(null)
+  const [validatingCoupon, setValidatingCoupon] = useState(false)
+  const [couponError, setCouponError] = useState("")
 
   // Fetch membership plans
   const fetchMembershipPlans = useCallback(async () => {
@@ -60,9 +65,8 @@ const MakeRechargeScreen = () => {
       setLoading(true)
       const { data } = await axios.get(`${API_URL_WEB}/api/v1/membership-plans`)
 
-   
-      const filter = data.data.filter((item)=> item.category === 'transport')
-      console.log(filter)
+      const filter = data.data.filter((item) => item.category === 'transport')
+
       // Add some features to each plan for better UI
       const enhancedPlans = filter.map((plan) => ({
         ...plan,
@@ -70,7 +74,6 @@ const MakeRechargeScreen = () => {
           `Valid for ${plan.validityDays} ${plan.whatIsThis}`,
           "Unlimited bookings",
           "Priority customer support",
-     
         ],
       }))
 
@@ -89,18 +92,24 @@ const MakeRechargeScreen = () => {
   // Initial load
   useEffect(() => {
     fetchMembershipPlans()
-  }, [fetchMembershipPlans])
+    refreshCoupons()
+  }, [fetchMembershipPlans, refreshCoupons])
 
   // Pull to refresh
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
     await fetchMembershipPlans()
+    await refreshCoupons()
     setRefreshing(false)
-  }, [fetchMembershipPlans])
+  }, [fetchMembershipPlans, refreshCoupons])
 
   // Handle plan selection
   const handlePlanSelect = useCallback((plan: MembershipPlan) => {
     setSelectedPlan(plan)
+    // Reset coupon when plan changes
+    setCouponCode("")
+    setAppliedCoupon(null)
+    setCouponError("")
   }, [])
 
   // Display payment status modal
@@ -127,20 +136,69 @@ const MakeRechargeScreen = () => {
     [navigation],
   )
 
+  // Validate coupon
+  const validateCoupon = useCallback(() => {
+    if (!couponCode.trim()) {
+      setCouponError("Please enter a coupon code")
+      return
+    }
+
+    setValidatingCoupon(true)
+    setCouponError("")
+
+    // Find the coupon in available coupons
+    const foundCoupon = coupons?.find(
+      (coupon) => coupon.code.toLowerCase() === couponCode.trim().toLowerCase() && coupon.isActive
+    )
+
+    if (foundCoupon) {
+      setAppliedCoupon(foundCoupon)
+      setShowCouponModal(false)
+      Alert.alert(
+        "Coupon Applied",
+        `Coupon "${foundCoupon.code}" for ${foundCoupon.discount}% discount has been applied!`
+      )
+    } else {
+      setCouponError("Invalid coupon code or coupon has expired")
+    }
+    setValidatingCoupon(false)
+  }, [couponCode, coupons])
+
+  // Remove applied coupon
+  const removeCoupon = useCallback(() => {
+    setAppliedCoupon(null)
+    setCouponCode("")
+  }, [])
+
+  // Calculate discounted price
+  const calculateDiscountedPrice = useCallback(() => {
+    if (!selectedPlan) return 0
+
+    if (appliedCoupon) {
+      const discountAmount = (selectedPlan.price * appliedCoupon.discount) / 100
+      const discountedPrice = selectedPlan.price - discountAmount
+      return parseFloat(discountedPrice.toFixed(1)) // returns number like 9.9
+    }
+
+    return parseFloat(selectedPlan.price.toFixed(1))
+  }, [selectedPlan, appliedCoupon])
+
+
   // Initiate Razorpay payment
   const initiatePayment = useCallback(async () => {
     if (!selectedPlan) {
       Alert.alert("Error", "Please select a membership plan")
       return
     }
-    console.log("user",)
 
     setLoading(true)
 
     try {
-      const response = await axios.get(
-        `http://192.168.1.11:3100/api/v1/rider/recharge-wallet/${selectedPlan._id}/${user.BH_DETAILS?.BH_ID}`,
-      )
+      // Construct URL with or without coupon
+      const baseUrl = `https://appapi.olyox.com/api/v1/rider/recharge-wallet/${selectedPlan._id}/${user.BH_DETAILS?.BH_ID}`
+      const urlWithParams = appliedCoupon ? `${baseUrl}?coupon=${appliedCoupon.code}&type=heavy` : baseUrl
+
+      const response = await axios.get(urlWithParams)
 
       if (!response.data || !response.data.order) {
         throw new Error("Invalid response from server")
@@ -150,9 +208,8 @@ const MakeRechargeScreen = () => {
         description: `${selectedPlan.title} Membership`,
         image: "https://www.olyox.com/assets/logo-CWkwXYQ_.png",
         currency: response.data.order.currency,
-        // key: "rzp_live_zD1yAIqb2utRwp",
-        key: "rzp_test_7atYe4nCssW6Po",
-
+        key: "rzp_live_zD1yAIqb2utRwp",
+        // key: "rzp_test_7atYe4nCssW6Po",
         amount: response.data.order.amount,
         name: "Olyox",
         order_id: response.data.order.id,
@@ -161,12 +218,12 @@ const MakeRechargeScreen = () => {
           contact: user?.BH_DETAILS?.data?.number,
           name: user?.BH_DETAILS?.data?.name,
         },
-        theme: { color: "#4F46E5" },
+        theme: { color: "#DA2E2A" },
       }
 
       const paymentResponse = await RazorpayCheckout.open(options)
 
-      const verifyResponse = await axios.post(`http://192.168.1.11:3100/api/v1/rider/recharge-verify/${user?.BH_ID}`, {
+      const verifyResponse = await axios.post(`https://appapi.olyox.com/api/v1/rider/recharge-verify/${user?.BH_ID}`, {
         razorpay_order_id: paymentResponse.razorpay_order_id,
         razorpay_payment_id: paymentResponse.razorpay_payment_id,
         razorpay_signature: paymentResponse.razorpay_signature,
@@ -181,7 +238,12 @@ const MakeRechargeScreen = () => {
         displayPaymentModal("failed", "Payment processed but verification failed. Please contact support.")
       }
     } catch (error) {
-      console.error("Payment error:", error.response.data)
+      console.error("Payment error:", error || error)
+      Alert.alert(
+        'Oops! Something Went Wrong',
+        error.response?.data?.message || 'We’re having trouble processing your request right now. Please try again in a moment.'
+      );
+
 
       if (error?.description === "Payment Cancelled" || error?.code === "PAYMENT_CANCELLED") {
         displayPaymentModal("cancelled", "You cancelled the payment. Please try again when you're ready.")
@@ -191,7 +253,17 @@ const MakeRechargeScreen = () => {
     } finally {
       setLoading(false)
     }
-  }, [selectedPlan, user, displayPaymentModal, refreshUserData])
+  }, [selectedPlan, user, displayPaymentModal, refreshUserData, appliedCoupon])
+
+  // Handle coupon button press
+  const handleCouponButtonPress = useCallback(() => {
+    // Don't show coupon modal for free or Rs 1 plans
+    if (selectedPlan && (selectedPlan.price <= 1)) {
+      return
+    }
+
+    setShowCouponModal(true)
+  }, [selectedPlan])
 
   // Render membership plan card
   const renderPlanCard = useCallback(
@@ -219,7 +291,7 @@ const MakeRechargeScreen = () => {
               <Text style={styles.validityText}>
                 {plan.validityDays} {plan.whatIsThis} membership
               </Text>
-              <Text style={[styles.validityText,{fontSize:12}]}>
+              <Text style={[styles.validityText, { fontSize: 12 }]}>
                 {plan?.description}
               </Text>
 
@@ -312,6 +384,56 @@ const MakeRechargeScreen = () => {
     </Modal>
   )
 
+  // Coupon modal
+  const renderCouponModal = () => (
+    <Modal
+      visible={showCouponModal}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setShowCouponModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Apply Coupon</Text>
+          <Text style={styles.modalMessage}>Enter a valid coupon code to get discount</Text>
+
+          <View style={styles.couponInputContainer}>
+            <TextInput
+              style={styles.couponInput}
+              placeholder="Enter coupon code"
+              value={couponCode}
+              onChangeText={setCouponCode}
+              autoCapitalize="characters"
+              editable={!validatingCoupon}
+            />
+            {validatingCoupon && (
+              <ActivityIndicator size="small" color="#4F46E5" style={styles.inputLoader} />
+            )}
+          </View>
+
+          {couponError ? <Text style={styles.errorText}>{couponError}</Text> : null}
+
+          <View style={styles.couponButtonsContainer}>
+            <TouchableOpacity
+              style={[styles.couponButton, styles.cancelCouponButton]}
+              onPress={() => setShowCouponModal(false)}
+            >
+              <Text style={styles.cancelCouponButtonText}>Cancel</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.couponButton, styles.applyCouponButton, validatingCoupon && styles.disabledButton]}
+              onPress={validateCoupon}
+              disabled={validatingCoupon}
+            >
+              <Text style={styles.applyCouponButtonText}>Apply</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  )
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
@@ -327,14 +449,6 @@ const MakeRechargeScreen = () => {
         </View>
       </View>
 
-      {/* Wallet balance */}
-      <View style={styles.walletContainer}>
-        <Icon name="wallet-outline" size={20} color="#4F46E5" />
-        <Text style={styles.walletText}>
-          Current Balance: <Text style={styles.walletAmount}>₹{user?.data?.wallet || 0}</Text>
-        </Text>
-      </View>
-
       {/* Content */}
       {loading && !refreshing && memberships.length === 0 ? (
         <View style={styles.loadingContainer}>
@@ -347,9 +461,6 @@ const MakeRechargeScreen = () => {
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#4F46E5"]} />}
         >
-          {/* Plans section */}
-          <Text style={styles.sectionTitle}>Available Plans</Text>
-
           {memberships.length === 0 && !loading ? (
             <View style={styles.emptyStateContainer}>
               <Icon name="package-variant" size={60} color="#CBD5E1" />
@@ -367,9 +478,35 @@ const MakeRechargeScreen = () => {
         </ScrollView>
       )}
 
-      {/* Payment button */}
+      {/* Coupon and Payment button */}
       {selectedPlan && (
         <View style={styles.paymentButtonContainer}>
+          {/* Coupon section (don't show for free/Rs 1 plans) */}
+          {selectedPlan.price > 1 && (
+            <View style={styles.couponSection}>
+              {appliedCoupon ? (
+                <View style={styles.appliedCouponContainer}>
+                  <View style={styles.appliedCouponInfo}>
+                    <Icon name="tag" size={18} color="#4F46E5" />
+                    <Text style={styles.appliedCouponText}>
+                      <Text style={styles.appliedCouponCode}>{appliedCoupon.code}</Text>
+                      {" applied for "}{appliedCoupon.discount}% off
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={removeCoupon} style={styles.removeCouponButton}>
+                    <Icon name="close" size={18} color="#64748B" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity style={styles.couponButton} onPress={handleCouponButtonPress}>
+                  <Icon name="tag-outline" size={18} color="#4F46E5" />
+                  <Text style={styles.couponButtonText}>Apply Coupon</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+
+          {/* Payment button */}
           <TouchableOpacity
             style={[styles.paymentButton, loading && styles.paymentButtonDisabled]}
             onPress={initiatePayment}
@@ -387,7 +524,12 @@ const MakeRechargeScreen = () => {
               ) : (
                 <>
                   <Icon name="credit-card-outline" size={20} color="#FFFFFF" />
-                  <Text style={styles.paymentButtonText}>Pay ₹{selectedPlan.price} with Razorpay</Text>
+                  <Text style={styles.paymentButtonText}>
+                    Pay ₹{calculateDiscountedPrice()} with Razorpay
+                    {appliedCoupon && (
+                      <Text style={styles.discountText}> (₹{selectedPlan.price} - {appliedCoupon.discount}%)</Text>
+                    )}
+                  </Text>
                 </>
               )}
             </LinearGradient>
@@ -397,6 +539,9 @@ const MakeRechargeScreen = () => {
 
       {/* Payment status modal */}
       {renderPaymentStatusModal()}
+
+      {/* Coupon modal */}
+      {renderCouponModal()}
     </SafeAreaView>
   )
 }
@@ -434,35 +579,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#64748B",
   },
-  walletContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F1F5F9",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginHorizontal: 20,
-    marginTop: 16,
-    borderRadius: 12,
-  },
-  walletText: {
-    fontSize: 14,
-    color: "#334155",
-    marginLeft: 8,
-  },
-  walletAmount: {
-    fontWeight: "700",
-    color: "#4F46E5",
-  },
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 40,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#0F172A",
-    marginBottom: 16,
   },
   plansContainer: {
     alignItems: "center",
@@ -551,6 +671,45 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 8,
   },
+  couponSection: {
+    marginBottom: 12,
+  },
+  couponButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  couponButtonText: {
+    fontSize: 14,
+    color: "#4F46E5",
+    fontWeight: "600",
+    marginLeft: 6,
+  },
+  appliedCouponContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#F1F5F9",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  appliedCouponInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  appliedCouponText: {
+    fontSize: 14,
+    color: "#334155",
+    marginLeft: 6,
+  },
+  appliedCouponCode: {
+    fontWeight: "700",
+    color: "#4F46E5",
+  },
+  removeCouponButton: {
+    padding: 4,
+  },
   paymentButton: {
     borderRadius: 12,
     overflow: "hidden",
@@ -569,6 +728,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FFFFFF",
     marginLeft: 8,
+  },
+  discountText: {
+    fontSize: 12,
+    opacity: 0.9,
   },
   loadingContainer: {
     flex: 1,
@@ -645,6 +808,66 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  couponInputContainer: {
+    width: "100%",
+    marginTop: 16,
+    marginBottom: 8,
+    position: "relative",
+  },
+  couponInput: {
+    width: "100%",
+    height: 48,
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    backgroundColor: "#F8FAFC",
+  },
+  inputLoader: {
+    position: "absolute",
+    right: 16,
+    top: 14,
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 12,
+    marginBottom: 8,
+    alignSelf: "flex-start",
+  },
+  couponButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginTop: 16,
+  },
+  couponButton: {
+    flex: 1,
+    height: 44,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 6,
+  },
+  cancelCouponButton: {
+    backgroundColor: "#F1F5F9",
+  },
+  cancelCouponButtonText: {
+    color: "#64748B",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  applyCouponButton: {
+    backgroundColor: "#4F46E5",
+  },
+  applyCouponButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 })
 

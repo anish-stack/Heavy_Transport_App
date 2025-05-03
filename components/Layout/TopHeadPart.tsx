@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native'
 import React from 'react'
 import { MaterialIcons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
@@ -7,18 +7,19 @@ import PropTypes from 'prop-types'
 export default function TopHeadPart({ icon, title, fnc }) {
     const navigation = useNavigation()
 
-    // Safe function execution to prevent errors
-    const handlePress = () => {
+    const handlePress = async () => {
         try {
+            // Always initiate the phone call
+            await Linking.openURL(`tel:01141236767`);
+    
+          
             if (typeof fnc === 'function') {
                 fnc();
-            } else {
-                console.warn("fnc prop is not a function");
             }
         } catch (error) {
-            console.error("Error executing fnc:", error);
+            console.error("Error executing fnc or dialing:", error);
         }
-    }
+    };
 
     return (
         <View style={styles.header}>
@@ -35,14 +36,12 @@ export default function TopHeadPart({ icon, title, fnc }) {
     )
 }
 
-// Default Props
 TopHeadPart.defaultProps = {
     icon: "support-agent",
     title: "Default Text",
-    fnc: () => console.log("Default function executed"),
+    fnc: null, // allow null to trigger phone dial
 }
 
-// Prop Types for Error Prevention
 TopHeadPart.propTypes = {
     icon: PropTypes.string,
     title: PropTypes.string,
@@ -67,7 +66,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: "bold",
         color: "#333",
-        flex: 1,  // Ensures title does not overflow
+        flex: 1,
         textAlign: "center",
     },
     supportButton: {

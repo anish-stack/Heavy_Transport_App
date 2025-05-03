@@ -63,6 +63,7 @@ export default function Layout({ children, onRefresh ,isHeaderShow=true,isBottom
             )}
             <Sidebar
                 name={user?.name || 'Guest'}
+                imagesUIser={user?.profile_image}
                 email={user?.email || 'email@gmail.com'}
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}

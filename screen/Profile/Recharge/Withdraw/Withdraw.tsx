@@ -13,7 +13,7 @@ import {
     Alert,
     Platform
 } from 'react-native';
-import { Feather, FontAwesome } from '@expo/vector-icons' 
+import { Feather, FontAwesome } from '@expo/vector-icons'
 
 import axios from 'axios';
 import { API_URL_WEB } from '../../../../constant/Api';
@@ -111,6 +111,7 @@ export default function WithdrawScreen() {
         fetchWithdrawals();
     }, [user.BH_DETAILS?.data?._id]);
 
+    console.log(user.BH_DETAILS?.data)
     const handleSubmit = async () => {
         if (!withdrawForm.amount || parseFloat(withdrawForm.amount) <= 0) {
             Alert.alert('Error', 'Please enter a valid amount');
@@ -121,6 +122,7 @@ export default function WithdrawScreen() {
             Alert.alert('Error', 'Insufficient balance');
             return;
         }
+
 
         setLoading(true);
         try {
@@ -155,11 +157,11 @@ export default function WithdrawScreen() {
                 { backgroundColor: getStatusColor(withdrawal.status).bg }
             ]}>
                 {withdrawal.status === 'Approved' ? (
-                    <CheckCircle size={18} color={getStatusColor(withdrawal.status).text} />
+                    <Feather name='alert-circle' size={18} color={getStatusColor(withdrawal.status).text} />
                 ) : withdrawal.status === 'Pending' ? (
-                    <Clock size={18} color={getStatusColor(withdrawal.status).text} />
+                    <Feather name='clock' size={18} color={getStatusColor(withdrawal.status).text} />
                 ) : (
-                    <XCircle size={18} color={getStatusColor(withdrawal.status).text} />
+                    <Feather name='x' size={18} color={getStatusColor(withdrawal.status).text} />
                 )}
                 <Text style={[
                     styles.statusText,
@@ -172,24 +174,24 @@ export default function WithdrawScreen() {
             <View style={styles.cardDetails}>
                 {withdrawal.method === 'UPI' ? (
                     <DetailRow
-                        icon={<AtSign size={18} color="#666" />}
+                        icon={'@'}
                         label="UPI ID"
                         value={withdrawal.upi_details?.upi_id || 'N/A'}
                     />
                 ) : (
                     <>
                         <DetailRow
-                            icon={<Bank size={18} color="#666" />}
+                            icon={<Feather name='bank' size={18} color="#666" />}
                             label="Bank"
                             value={withdrawal.BankDetails?.bankName || 'N/A'}
                         />
                         <DetailRow
-                            icon={<CreditCard size={18} color="#666" />}
+                            icon={<Feather name='credit-card' size={18} color="#666" />}
                             label="Account"
                             value={withdrawal.BankDetails?.accountNo || 'N/A'}
                         />
                         <DetailRow
-                            icon={<Barcode size={18} color="#666" />}
+                            icon={<Feather name='barcode' size={18} color="#666" />}
                             label="IFSC"
                             value={withdrawal.BankDetails?.ifsc_code || 'N/A'}
                         />
@@ -197,7 +199,7 @@ export default function WithdrawScreen() {
                 )}
 
                 <DetailRow
-                    icon={<Calendar size={18} color="#666" />}
+                    icon={<Feather name='calendar' size={18} color="#666" />}
                     label="Date"
                     value={formatDate(withdrawal.requestedAt)}
                 />
@@ -244,7 +246,7 @@ export default function WithdrawScreen() {
                 <ScrollView style={styles.content}>
                     {withdrawals.length === 0 ? (
                         <View style={styles.empty}>
-                            <Feather name='money' size={64} color="#666" />
+                            <FontAwesome name='rupee' size={64} color="#666" />
                             <Text style={styles.emptyText}>No withdrawals yet</Text>
                         </View>
                     ) : (
@@ -350,7 +352,7 @@ const WithdrawalModal = ({
                             <View style={styles.inputGroup}>
                                 <Text style={styles.label}>UPI ID</Text>
                                 <View style={styles.inputWrapper}>
-                                   <Text>@</Text>
+                                    <Text>@</Text>
                                     <TextInput
                                         style={styles.input}
                                         placeholder="Enter UPI ID"

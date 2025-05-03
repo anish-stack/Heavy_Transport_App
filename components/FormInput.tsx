@@ -45,15 +45,14 @@ export default function FormInput({
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   inputGroup: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 6,
     color: COLORS.dark,
   },
   inputWrapper: {
@@ -61,19 +60,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     backgroundColor: '#fff',
-
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   iconContainer: {
-    marginRight: 8,
+    marginRight: 10,
   },
   input: {
     flex: 1,
     fontSize: 16,
     color: COLORS.dark,
+    paddingVertical: 6,
   },
   inputError: {
     borderColor: COLORS.error,

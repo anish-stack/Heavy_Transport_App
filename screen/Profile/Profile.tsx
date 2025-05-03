@@ -8,13 +8,13 @@ import {
   Pressable,
   StyleSheet,
 } from "react-native";
-import { 
-  FontAwesome5, 
-  MaterialIcons, 
-  Feather 
+import {
+  FontAwesome5,
+  MaterialIcons,
+  Feather
 } from '@expo/vector-icons';
 import { useAuth } from "../../context/AuthContext";
-import { useNavigation } from "@react-navigation/native";
+import { CommonActions, useNavigation } from "@react-navigation/native";
 import TopHeadPart from "../../components/Layout/TopHeadPart";
 import Layout from "../../components/Layout/Layout";
 
@@ -45,7 +45,7 @@ interface ProfileLink {
 /**
  * Interface for ProfileLinkProps component
  */
-interface ProfileLinkProps extends ProfileLink {}
+interface ProfileLinkProps extends ProfileLink { }
 
 /**
  * Profile screen component
@@ -60,6 +60,17 @@ export default function Profile() {
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0EA5E9" />
       </View>
+    );
+  }
+  const logout = async () => {
+    await deleteToken()
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [
+          { name: 'login' },
+        ],
+      })
     );
   }
 
@@ -87,23 +98,24 @@ export default function Profile() {
       showChevron: true,
     },
     {
-      icon: <Feather name="settings" size={22} color="#64748B" />,
-      title: "Settings",
-      subtitle: "App preferences and notifications",
-      onPress: () => navigation.navigate("profile-settings"),
+      icon: <Feather name="arrow-down-circle" size={22} color="#64748B" />,
+      title: "Withdraw",
+      subtitle: "Manage your withdrawal requests",
+      onPress: () => navigation.navigate("Withdraw"),
       showChevron: true,
     },
     {
-      icon: <MaterialIcons name="privacy-tip" size={22} color="#64748B" />,
-      title: "Policy",
-      subtitle: "App Terms and Conditions",
-      onPress: () => navigation.navigate("App-Policy"),
+      icon: <Feather name="refresh-cw" size={22} color="#64748B" />,
+      title: "Recharge",
+      subtitle: "Recharge Your  account",
+      onPress: () => navigation.navigate("Recharge"),
       showChevron: true,
     },
+
     {
       icon: <MaterialIcons name="logout" size={22} color="#EF4444" />,
       title: "Logout",
-      onPress: () => deleteToken(),
+      onPress: () => logout(),
       danger: true,
     },
   ];
@@ -134,7 +146,7 @@ const ProfileHeader = ({ user }: { user?: User }) => (
   <View style={styles.header}>
     <Image
       source={{
-        uri: user?.profileImageUrl || 
+        uri: user?.profile_image ||
           "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
       }}
       style={styles.profileImage}
@@ -149,9 +161,9 @@ const ProfileHeader = ({ user }: { user?: User }) => (
             user?.status === "Active" && styles.statusBadgeActive,
           ]}
         >
-          <Text 
+          <Text
             style={[
-              styles.statusText, 
+              styles.statusText,
               user?.status === "Active" && styles.statusTextActive
             ]}
           >

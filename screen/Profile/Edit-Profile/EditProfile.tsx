@@ -113,7 +113,7 @@ export default function EditProfile() {
       });
 
       if (user.profileImageUrl) {
-        setImagePreview(user.profileImageUrl);
+        setImagePreview(user.profile_image);
       }
     }
   }, [user]);
@@ -122,16 +122,6 @@ export default function EditProfile() {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Validate time format
-    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    
-    if (!timeRegex.test(formData.call_timing.start_time)) {
-      newErrors.call_timing = "Invalid start time format";
-    }
-    
-    if (!timeRegex.test(formData.call_timing.end_time)) {
-      newErrors.call_timing = "Invalid end time format";
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -336,7 +326,7 @@ export default function EditProfile() {
             <Image
               source={{
                 uri: imagePreview || 
-                  user?.profileImageUrl ||
+                  user?.profile_image ||
                   "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
               }}
               style={styles.profileImage}

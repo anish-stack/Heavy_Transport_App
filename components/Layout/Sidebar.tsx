@@ -27,7 +27,7 @@ const menuItems: MenuItem[] = [
     { icon: 'calendar', label: 'Profile', route: 'Profile' },
     { icon: 'car', label: 'Recharge', route: 'Recharge' },
     { icon: 'person', label: 'Refferal', route: 'Refferal' },
-    { icon: 'settings', label: 'Call Request', route: 'Call_Request' },
+    { icon: 'settings', label: 'Call Request', route: 'request-for-you' },
     { icon: 'settings', label: 'Withdraw', route: 'Withdraw' },
     { icon: 'help-circle', label: 'Help', route: 'Help' },
 ];
@@ -37,7 +37,7 @@ interface SidebarProps {
     onClose: () => void;
 }
 
-export default function Sidebar({ isOpen, onClose, name, email }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose, name, email, imagesUIser }: SidebarProps) {
     const navigation = useNavigation();
     const { deleteToken } = useAuth()
     const translateX = useRef(new Animated.Value(-300)).current;
@@ -103,7 +103,7 @@ export default function Sidebar({ isOpen, onClose, name, email }: SidebarProps) 
                 ]}>
                 <View style={styles.header}>
                     <Image
-                        source={{ uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400' }}
+                        source={{ uri: imagesUIser ? imagesUIser : 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400' }}
                         style={styles.avatar}
                     />
                     <View style={styles.userInfo}>
