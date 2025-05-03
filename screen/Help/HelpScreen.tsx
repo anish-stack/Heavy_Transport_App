@@ -11,7 +11,7 @@ import {
   Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CircleHelp as HelpCircle, Phone, Mail, MessageCircle, ChevronDown, ChevronUp, Send } from 'lucide-react-native';
+import {AntDesign,Feather} from '@expo/vector-icons'
 import TopHeadPart from '../../components/Layout/TopHeadPart';
 import { COLORS } from '../../constant/Colors';
 
@@ -101,7 +101,7 @@ export default function HelpScreen() {
               style={[styles.contactCard, { backgroundColor: '#25D366' }]}
               onPress={() => handleContact('whatsapp')}
             >
-              <MessageCircle size={24} color="#fff" />
+              <AntDesign name='message1' size={24} color="#fff" />
               <Text style={styles.contactText}>WhatsApp</Text>
             </TouchableOpacity>
 
@@ -109,7 +109,7 @@ export default function HelpScreen() {
               style={[styles.contactCard, { backgroundColor: '#2196F3' }]}
               onPress={() => handleContact('phone')}
             >
-              <Phone size={24} color="#fff" />
+              <Feather name='phone-call' size={24} color="#fff" />
               <Text style={styles.contactText}>Call Us</Text>
             </TouchableOpacity>
 
@@ -117,7 +117,7 @@ export default function HelpScreen() {
               style={[styles.contactCard, { backgroundColor: '#FF5722' }]}
               onPress={() => handleContact('email')}
             >
-              <Mail size={24} color="#fff" />
+              <AntDesign name='mail' size={24} color="#fff" />
               <Text style={styles.contactText}>Email</Text>
             </TouchableOpacity>
           </View>
@@ -134,9 +134,9 @@ export default function HelpScreen() {
               <View style={styles.faqHeader}>
                 <Text style={styles.faqQuestion}>{faq.question}</Text>
                 {expandedFaq === index ? (
-                  <ChevronUp size={20} color="#666" />
+                  <AntDesign name='up' size={20} color="#666" />
                 ) : (
-                  <ChevronDown size={20} color="#666" />
+                  <AntDesign name='down' size={20} color="#666" />
                 )}
               </View>
               {expandedFaq === index && (
@@ -195,14 +195,14 @@ export default function HelpScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+              style={[styles.submitButton]}
               onPress={handleSubmit}
               disabled={loading}
             >
               <Text style={styles.submitButtonText}>
                 {loading ? 'Sending...' : 'Send Message'}
               </Text>
-              <Send size={20} color="#fff" />
+              <Feather name='send' size={20} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   submitButton: {
-    backgroundColor: COLORS.lightAccent,
+    backgroundColor: COLORS.darkAccent,
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
@@ -334,9 +334,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-  submitButtonDisabled: {
-    opacity: 0.7,
-  },
+
   submitButtonText: {
     color: '#fff',
     fontSize: 16,

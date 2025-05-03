@@ -13,8 +13,8 @@ import {
     Alert,
     Platform
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Wallet, ArrowRight, Ban as Bank, CreditCard, Calendar, CircleCheck as CheckCircle, Clock, Circle as XCircle, AtSign, Barcode, IndianRupee, Plus, X } from 'lucide-react-native';
+import { Feather, FontAwesome } from '@expo/vector-icons' 
+
 import axios from 'axios';
 import { API_URL_WEB } from '../../../../constant/Api';
 import { useAuth } from '../../../../context/AuthContext';
@@ -141,9 +141,9 @@ export default function WithdrawScreen() {
             <View style={styles.cardHeader}>
                 <View style={styles.methodBadge}>
                     {withdrawal.method === 'UPI' ? (
-                        <CreditCard size={20} color="#2196F3" />
+                        <Feather name='credit-card' size={20} color="#2196F3" />
                     ) : (
-                        <Bank size={20} color="#2196F3" />
+                        <FontAwesome name='bank' size={20} color="#2196F3" />
                     )}
                     <Text style={styles.methodText}>{withdrawal.method}</Text>
                 </View>
@@ -231,7 +231,7 @@ export default function WithdrawScreen() {
                     style={styles.newButton}
                     onPress={() => setModalVisible(true)}
                 >
-                    <Plus size={20} color="#fff" />
+                    <Feather name='plus' size={20} color="#fff" />
                     <Text style={styles.newButtonText}>Withdraw</Text>
                 </TouchableOpacity>
             </View>
@@ -244,7 +244,7 @@ export default function WithdrawScreen() {
                 <ScrollView style={styles.content}>
                     {withdrawals.length === 0 ? (
                         <View style={styles.empty}>
-                            <Wallet size={64} color="#666" />
+                            <Feather name='money' size={64} color="#666" />
                             <Text style={styles.emptyText}>No withdrawals yet</Text>
                         </View>
                     ) : (
@@ -294,7 +294,7 @@ const WithdrawalModal = ({
                     <View style={styles.modalHeader}>
                         <Text style={styles.modalTitle}>New Withdrawal</Text>
                         <TouchableOpacity onPress={onClose}>
-                            <X size={24} color="#666" />
+                            <Feather name='x' size={24} color="#666" />
                         </TouchableOpacity>
                     </View>
 
@@ -302,7 +302,7 @@ const WithdrawalModal = ({
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Amount</Text>
                             <View style={styles.inputWrapper}>
-                                <IndianRupee size={20} color="#666" />
+                                <FontAwesome name='rupee' size={20} color="#666" />
                                 <TextInput
                                     style={styles.input}
                                     keyboardType="numeric"
@@ -331,9 +331,9 @@ const WithdrawalModal = ({
                                         })}
                                     >
                                         {method === 'UPI' ? (
-                                            <CreditCard size={20} color={form.method === method ? '#fff' : '#666'} />
+                                            <Feather name='credit-card' size={20} color={form.method === method ? '#fff' : '#666'} />
                                         ) : (
-                                            <Bank size={20} color={form.method === method ? '#fff' : '#666'} />
+                                            <FontAwesome name='bank' size={20} color={form.method === method ? '#fff' : '#666'} />
                                         )}
                                         <Text style={[
                                             styles.methodButtonText,
@@ -350,7 +350,7 @@ const WithdrawalModal = ({
                             <View style={styles.inputGroup}>
                                 <Text style={styles.label}>UPI ID</Text>
                                 <View style={styles.inputWrapper}>
-                                    <AtSign size={20} color="#666" />
+                                   <Text>@</Text>
                                     <TextInput
                                         style={styles.input}
                                         placeholder="Enter UPI ID"
@@ -367,7 +367,7 @@ const WithdrawalModal = ({
                                 <View style={styles.inputGroup}>
                                     <Text style={styles.label}>Bank Name</Text>
                                     <View style={styles.inputWrapper}>
-                                        <Bank size={20} color="#666" />
+                                        <FontAwesome name='bank' size={20} color="#666" />
                                         <TextInput
                                             style={styles.input}
                                             placeholder="Enter bank name"
@@ -383,7 +383,7 @@ const WithdrawalModal = ({
                                 <View style={styles.inputGroup}>
                                     <Text style={styles.label}>Account Number</Text>
                                     <View style={styles.inputWrapper}>
-                                        <CreditCard size={20} color="#666" />
+                                        <Feather name='credit-card' size={20} color="#666" />
                                         <TextInput
                                             style={styles.input}
                                             placeholder="Enter account number"
@@ -400,7 +400,7 @@ const WithdrawalModal = ({
                                 <View style={styles.inputGroup}>
                                     <Text style={styles.label}>IFSC Code</Text>
                                     <View style={styles.inputWrapper}>
-                                        <Barcode size={20} color="#666" />
+                                        <FontAwesome name='barcode' size={20} color="#666" />
                                         <TextInput
                                             style={styles.input}
                                             placeholder="Enter IFSC code"
@@ -425,7 +425,7 @@ const WithdrawalModal = ({
                         <Text style={styles.submitButtonText}>
                             {loading ? 'Processing...' : 'Submit Withdrawal'}
                         </Text>
-                        <ArrowRight size={20} color="#fff" />
+                        <Feather name='arrow-right' size={20} color="#fff" />
                     </TouchableOpacity>
                 </View>
             </View>

@@ -12,7 +12,7 @@ import {
     Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Share, MessageSquare } from 'lucide-react-native';
+import { Feather } from '@expo/vector-icons' 
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -98,22 +98,22 @@ export default function ReferralHistory() {
         <View style={styles.card}>
             <View style={styles.cardHeader}>
                 <View style={styles.badgeContainer}>
-                    <Share size={18} color="#fff" />
+                    <Feather name='share' size={18} color="#fff" />
                 </View>
                 <Text style={styles.cardTitle}>Referral #{index + 1}</Text>
             </View>
 
             <View style={styles.cardContent}>
-                <InfoRow icon={<MessageSquare size={18} color="#007bff" />} label="Name" value={item.name} />
-                <InfoRow icon={<Share size={18} color="#28a745" />} label="BHID" value={item.myReferral} />
-                <InfoRow icon={<MessageSquare size={18} color="#ff5722" />} label="Phone" value={item.number} />
+                <InfoRow icon={<Feather name='message' size={18} color="#007bff" />} label="Name" value={item.name} />
+                <InfoRow icon={<Feather name='share' size={18} color="#28a745" />} label="BHID" value={item.myReferral} />
+                <InfoRow icon={<Feather name='message' size={18} color="#ff5722" />} label="Phone" value={item.number} />
                 <InfoRow
-                    icon={<MessageSquare size={18} color="#3f51b5" />}
+                    icon={<Feather name='message' size={18} color="#3f51b5" />}
                     label="Plan"
                     value={item.member_id?.title || 'Recharge Not Done'}
                 />
                 <InfoRow
-                    icon={<MessageSquare size={18} color="#3f51b5" />}
+                    icon={<Feather name='message' size={18} color="#3f51b5" />}
                     label="Category"
                     value={item.category?.title || 'N/A'}
                 />
@@ -145,7 +145,7 @@ export default function ReferralHistory() {
             />
             <Text style={styles.emptyText}>No referrals found for {activeLevelTab}</Text>
             <TouchableOpacity style={styles.button} onPress={fetchReferralData}>
-                <Share size={16} color="#fff" />
+                <Feather name='share' size={16} color="#fff" />
                 <Text style={styles.buttonText}>Refresh</Text>
             </TouchableOpacity>
         </View>
@@ -154,13 +154,13 @@ export default function ReferralHistory() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <Share size={24} color="#007bff" />
+                <Feather name='share' size={24} color="#007bff" />
                 <Text style={styles.heading}>Referral History</Text>
                 <TouchableOpacity
                     style={styles.shareButton}
                     onPress={handleShareOnWhatsApp}
                 >
-                    <Share size={20} color="#fff" />
+                    <Feather name='share' size={20} color="#fff" />
                     <Text style={styles.shareButtonText}>Share</Text>
                 </TouchableOpacity>
             </View>

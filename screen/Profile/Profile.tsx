@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   View,
   Text,
@@ -5,22 +6,33 @@ import {
   ActivityIndicator,
   ScrollView,
   Pressable,
+  StyleSheet,
 } from "react-native";
-import { StyleSheet } from "react-native";
-import {
-  User,
-  Settings,
-  MapPin,
-  Truck,
-  ChevronRight,
-  LogOut,
-  Lock,
-} from "lucide-react-native";
+import { 
+  FontAwesome5, 
+  MaterialIcons, 
+  Feather 
+} from '@expo/vector-icons';
 import { useAuth } from "../../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 import TopHeadPart from "../../components/Layout/TopHeadPart";
 import Layout from "../../components/Layout/Layout";
 
+/**
+ * Interface for user profile data
+ */
+interface User {
+  name?: string;
+  email?: string;
+  profileImageUrl?: string;
+  status?: string;
+  service_areas?: any[];
+  vehicle_info?: any[];
+}
+
+/**
+ * Interface for profile link items
+ */
 interface ProfileLink {
   icon: React.ReactNode;
   title: string;
@@ -30,11 +42,19 @@ interface ProfileLink {
   danger?: boolean;
 }
 
-export default function Profile() {
-  const router = useNavigation();
-  const { user, loading, deleteToken } = useAuth();
-  console.log(user);
+/**
+ * Interface for ProfileLinkProps component
+ */
+interface ProfileLinkProps extends ProfileLink {}
 
+/**
+ * Profile screen component
+ */
+export default function Profile() {
+  const navigation = useNavigation();
+  const { user, loading, deleteToken } = useAuth();
+
+  // Show loading indicator when data is being fetched
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -43,124 +63,139 @@ export default function Profile() {
     );
   }
 
+  // Profile navigation links configuration
   const profileLinks: ProfileLink[] = [
     {
-      icon: <User size={24} color="#64748B" />,
+      icon: <FontAwesome5 name="user-edit" size={22} color="#64748B" />,
       title: "Edit Profile",
       subtitle: "Update your personal information",
-      onPress: () => router.navigate("profile-edit"),
+      onPress: () => navigation.navigate("profile-edit"),
       showChevron: true,
     },
     {
-      icon: <MapPin size={24} color="#64748B" />,
+      icon: <FontAwesome5 name="map-marker-alt" size={22} color="#64748B" />,
       title: "Service Areas",
       subtitle: `${user?.service_areas?.length || 0} areas configured`,
-      onPress: () => router.navigate("profile-service-areas"),
+      onPress: () => navigation.navigate("profile-service-areas"),
       showChevron: true,
     },
     {
-      icon: <Truck size={24} color="#64748B" />,
+      icon: <FontAwesome5 name="truck" size={22} color="#64748B" />,
       title: "Vehicles",
       subtitle: `${user?.vehicle_info?.length || 0} vehicles registered`,
-      onPress: () => router.navigate("profile-vehicles"),
+      onPress: () => navigation.navigate("profile-vehicles"),
       showChevron: true,
     },
     {
-      icon: <Settings size={24} color="#64748B" />,
+      icon: <Feather name="settings" size={22} color="#64748B" />,
       title: "Settings",
       subtitle: "App preferences and notifications",
-      onPress: () => router.navigate("profile-settings"),
+      onPress: () => navigation.navigate("profile-settings"),
       showChevron: true,
     },
-
     {
-      icon: <Lock size={24} color="#64748B" />,
+      icon: <MaterialIcons name="privacy-tip" size={22} color="#64748B" />,
       title: "Policy",
-      subtitle: "App Term And Conditions",
-      onPress: () => router.navigate("App-Policy"),
+      subtitle: "App Terms and Conditions",
+      onPress: () => navigation.navigate("App-Policy"),
       showChevron: true,
     },
     {
-      icon: <LogOut size={24} color="#EF4444" />,
+      icon: <MaterialIcons name="logout" size={22} color="#EF4444" />,
       title: "Logout",
       onPress: () => deleteToken(),
       danger: true,
     },
   ];
 
-  const ProfileLink = ({
-    icon,
-    title,
-    subtitle,
-    onPress,
-    showChevron,
-    danger,
-  }: ProfileLink) => (
-    <Pressable
-      style={({ pressed }) => [
-        styles.linkContainer,
-        pressed && styles.linkPressed,
-      ]}
-      onPress={onPress}
-    >
-      <View style={styles.linkContent}>
-        <View style={styles.linkIcon}>{icon}</View>
-        <View style={styles.linkText}>
-          <Text style={[styles.linkTitle, danger && styles.dangerText]}>
-            {title}
-          </Text>
-          {subtitle && <Text style={styles.linkSubtitle}>{subtitle}</Text>}
-        </View>
-        {showChevron && <ChevronRight size={20} color="#94A3B8" />}
-      </View>
-    </Pressable>
-  );
-
   return (
-    <>
-      <Layout isHeaderShow={false}>
-      <TopHeadPart title={"My Profile"} />
-        <ScrollView
-          style={styles.container}
-          contentContainerStyle={styles.contentContainer}
-        >
-          <View style={styles.header}>
-            <Image
-              source={{
-                uri:
-                  user?.profileImageUrl ||
-                  "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-              }}
-              style={styles.profileImage}
-            />
-            <View style={styles.headerText}>
-              <Text style={styles.name}>{user?.name || "John Doe"}</Text>
-              <Text style={styles.email}>
-                {user?.email || "john@example.com"}
-              </Text>
-              <View style={styles.statusContainer}>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    user?.status === "Active" && styles.statusBadgeActive,
-                  ]}
-                >
-                  <Text style={styles.statusText}>{user?.status}</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.linksSection}>
-            {profileLinks.map((link, index) => (
-              <ProfileLink key={index} {...link} />
-            ))}
-          </View>
-        </ScrollView>
-      </Layout>
-    </>
+    <Layout isHeaderShow={false}>
+      <TopHeadPart title="My Profile" />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <ProfileHeader user={user} />
+        <View style={styles.linksSection}>
+          {profileLinks.map((link, index) => (
+            <ProfileLinkItem key={index} {...link} />
+          ))}
+        </View>
+      </ScrollView>
+    </Layout>
   );
 }
+
+/**
+ * Profile header component showing user information
+ */
+const ProfileHeader = ({ user }: { user?: User }) => (
+  <View style={styles.header}>
+    <Image
+      source={{
+        uri: user?.profileImageUrl || 
+          "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+      }}
+      style={styles.profileImage}
+    />
+    <View style={styles.headerText}>
+      <Text style={styles.name}>{user?.name || "John Doe"}</Text>
+      <Text style={styles.email}>{user?.email || "john@example.com"}</Text>
+      <View style={styles.statusContainer}>
+        <View
+          style={[
+            styles.statusBadge,
+            user?.status === "Active" && styles.statusBadgeActive,
+          ]}
+        >
+          <Text 
+            style={[
+              styles.statusText, 
+              user?.status === "Active" && styles.statusTextActive
+            ]}
+          >
+            {user?.status || "Pending"}
+          </Text>
+        </View>
+      </View>
+    </View>
+  </View>
+);
+
+/**
+ * ProfileLinkItem component for navigation options
+ */
+const ProfileLinkItem = ({
+  icon,
+  title,
+  subtitle,
+  onPress,
+  showChevron,
+  danger,
+}: ProfileLinkProps) => (
+  <Pressable
+    style={({ pressed }) => [
+      styles.linkContainer,
+      pressed && styles.linkPressed,
+    ]}
+    onPress={onPress}
+    android_ripple={{ color: '#F1F5F9' }}
+  >
+    <View style={styles.linkContent}>
+      <View style={styles.linkIcon}>{icon}</View>
+      <View style={styles.linkText}>
+        <Text style={[styles.linkTitle, danger && styles.dangerText]}>
+          {title}
+        </Text>
+        {subtitle && <Text style={styles.linkSubtitle}>{subtitle}</Text>}
+      </View>
+      {showChevron && (
+        <MaterialIcons name="chevron-right" size={22} color="#94A3B8" />
+      )}
+    </View>
+  </Pressable>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -174,6 +209,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#F8FAFC",
   },
   header: {
     padding: 24,
@@ -182,12 +218,22 @@ const styles = StyleSheet.create({
     borderBottomColor: "#E2E8F0",
     flexDirection: "row",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2.22,
+    elevation: 2,
   },
   profileImage: {
     width: 80,
     height: 80,
     borderRadius: 40,
     marginRight: 16,
+    borderWidth: 2,
+    borderColor: "#E2E8F0",
   },
   headerText: {
     flex: 1,
@@ -221,16 +267,29 @@ const styles = StyleSheet.create({
     color: "#92400E",
     fontWeight: "500",
   },
+  statusTextActive: {
+    color: "#166534",
+  },
   linksSection: {
-    marginTop: 24,
+    marginTop: 16,
     backgroundColor: "white",
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
+    borderRadius: 12,
+    borderWidth: 1,
     borderColor: "#E2E8F0",
+    marginHorizontal: 16,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2.22,
+    elevation: 2,
   },
   linkContainer: {
     paddingVertical: 16,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: "#E2E8F0",
   },
@@ -243,6 +302,8 @@ const styles = StyleSheet.create({
   },
   linkIcon: {
     marginRight: 16,
+    width: 24,
+    alignItems: "center",
   },
   linkText: {
     flex: 1,

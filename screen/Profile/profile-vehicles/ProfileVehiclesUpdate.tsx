@@ -9,12 +9,11 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../../context/AuthContext";
-import {
-  Truck,
-  X,
-  Plus,
-  CircleAlert as AlertCircle,
-} from "lucide-react-native";
+
+import { 
+
+  Feather 
+} from '@expo/vector-icons';
 import TopHeadPart from "../../../components/Layout/TopHeadPart";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { fetchVehicles, fetchVehiclesCategory } from "../../../utils/Api_Fetchings";
@@ -148,7 +147,7 @@ export default function ProfileVehiclesUpdate() {
         <ScrollView style={styles.content}>
           {error ? (
             <View style={styles.errorContainer}>
-              <AlertCircle color="#EF4444" size={20} />
+              <Feather name="alert-circle" color="#EF4444" size={20} />
               <Text style={styles.errorText}>{error}</Text>
             </View>
           ) : null}
@@ -162,7 +161,7 @@ export default function ProfileVehiclesUpdate() {
                 {selectedVehicles.map((vehicle) => (
                   <View key={vehicle._id} style={styles.vehicleCard}>
                     <View style={styles.vehicleInfo}>
-                      <Truck size={20} color={COLORS.error} />
+                      <Feather name="truck" size={20} color={COLORS.error} />
                       <Text style={styles.vehicleName}>{vehicle.name}</Text>
                       <Text style={styles.vehicleType}>
                         {vehicle.vehicleType}
@@ -172,7 +171,7 @@ export default function ProfileVehiclesUpdate() {
                       style={styles.removeButton}
                       onPress={() => toggleVehicleSelection(vehicle)}
                     >
-                      <X size={16} color="#EF4444" />
+                      <Feather name="x" size={16} color="#EF4444" />
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -226,7 +225,7 @@ export default function ProfileVehiclesUpdate() {
                     ]}
                     onPress={() => toggleVehicleSelection(vehicle)}
                   >
-                    <Truck
+                    <Feather name="truck"
                       size={20}
                       color={isSelected ? "#FFFFFF" : COLORS.error }
                     />
@@ -240,7 +239,7 @@ export default function ProfileVehiclesUpdate() {
                     </Text>
                     {isSelected && (
                       <View style={styles.selectedIndicator}>
-                        <Plus size={16} color="#FFFFFF" />
+                        <Feather name="plus" size={16} color="#FFFFFF" />
                       </View>
                     )}
                   </TouchableOpacity>

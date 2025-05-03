@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { Upload, CircleCheck as CheckCircle, Circle as XCircle, Clock } from 'lucide-react-native';
+import { Feather } from '@expo/vector-icons';
 import { Document, DocumentType } from './documents';
 
 interface Props {
@@ -27,13 +27,13 @@ export function DocumentUploadBlock({ title, document, onUpload, disabled }: Pro
   const getStatusIcon = () => {
     switch (document?.document_status) {
       case 'Approved':
-        return <CheckCircle size={24} color="#22c55e" />;
+        return <Feather name='check-circle' size={24} color="#22c55e" />;
       case 'Rejected':
-        return <XCircle size={24} color="#ef4444" />;
+        return <Feather name='x' size={24} color="#ef4444" />;
       case 'Pending':
-        return <Clock size={24} color="#f59e0b" />;
+        return <Feather name='clock' size={24} color="#f59e0b" />;
       default:
-        return <Upload size={24} color="#94a3b8" />;
+        return <Feather name='upload' size={24} color="#94a3b8" />;
     }
   };
 
