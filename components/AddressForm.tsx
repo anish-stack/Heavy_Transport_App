@@ -151,7 +151,7 @@ export default function AddressForm({ address, onAddressChange, errors }: Addres
           </View>
         )}
         
-        {showSuggestions && addressSuggestions.length > 0 && (
+        {/* {showSuggestions && addressSuggestions.length > 0 && (
           <View style={styles.suggestionsContainer}>
             <FlatList
               data={addressSuggestions}
@@ -165,7 +165,7 @@ export default function AddressForm({ address, onAddressChange, errors }: Addres
               windowSize={5}
             />
           </View>
-        )}
+        )} */}
       </View>
 
       <FormInput

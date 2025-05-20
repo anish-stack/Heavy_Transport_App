@@ -1,85 +1,134 @@
-import React, { useState, useEffect } from 'react';
+
+import { useState, useEffect } from "react"
 import {
     View,
     Text,
     StyleSheet,
-    ScrollView,
-    TouchableOpacity,
-    ActivityIndicator,
-    Modal,
     TextInput,
-    Keyboard,
-    TouchableWithoutFeedback,
+    TouchableOpacity,
+    ScrollView,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
     Alert,
-    Platform
-} from 'react-native';
-import { Feather, FontAwesome } from '@expo/vector-icons'
+} from "react-native"
+import { useRoute } from "@react-navigation/native"
 
+import { FontAwesome, MaterialIcons, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons"
+import { LinearGradient } from "expo-linear-gradient"
 import axios from 'axios';
 import { API_URL_WEB } from '../../../../constant/Api';
 import { useAuth } from '../../../../context/AuthContext';
 import Layout from '../../../../components/Layout/Layout';
 
-// Types
-interface BankDetails {
-    accountNo: string;
-    ifsc_code: string;
-    bankName: string;
-}
-
-interface UPIDetails {
-    upi_id: string;
-}
-
-interface WithdrawalForm {
-    amount: string;
-    method: 'UPI' | 'Bank Transfer';
-    isBank: boolean;
-    isUpi: boolean;
-    BankDetails: BankDetails;
-    upi_details: UPIDetails;
-}
-
-interface Withdrawal {
-    _id: string;
-    amount: number;
-    method: 'UPI' | 'Bank Transfer';
-    status: 'Approved' | 'Pending' | 'Rejected';
-    BankDetails?: BankDetails;
-    upi_details?: UPIDetails;
-    trn_no?: string;
-    requestedAt: string;
-    time_of_payment_done?: string;
-}
-
-interface Props {
-    user: {
-        _id: string;
-        balance: number;
-    };
-}
-
-const INITIAL_FORM: WithdrawalForm = {
-    amount: '',
-    method: 'UPI',
-    isBank: false,
-    isUpi: true,
-    BankDetails: {
-        accountNo: '',
-        ifsc_code: '',
-        bankName: '',
-    },
-    upi_details: {
-        upi_id: '',
-    },
+const COLORS = {
+    primary: '#6C63FF',
+    secondary: '#F5F5F5',
+    accent: '#FF6584',
+    success: '#4CAF50',
+    warning: '#FFC107',
+    error: '#F44336',
+    info: '#2196F3',
+    dark: '#333333',
+    light: '#FFFFFF',
+    gray: '#9E9E9E',
+    lightGray: '#E0E0E0',
+    darkGray: '#616161',
+    background: '#F9FAFC',
+    card: '#FFFFFF',
+    text: '#333333',
+    border: '#E0E0E0',
+    notification: '#FF3B30',
+    shadow: 'rgba(0, 0, 0, 0.1)',
+};
+const SIZES = {
+    xs: 10,
+    small: 12,
+    medium: 14,
+    large: 16,
+    xl: 18,
+    xxl: 20,
+    xxxl: 24,
+    title: 32,
+};
+const WEIGHTS = {
+    light: '300',
+    regular: '400',
+    medium: '500',
+    semiBold: '600',
+    bold: '700',
+    extraBold: '800',
+};
+const SPACING = {
+    xs: 4,
+    small: 8,
+    medium: 12,
+    large: 16,
+    xl: 20,
+    xxl: 24,
+    xxxl: 32,
 };
 
-export default function WithdrawScreen() {
-    const [modalVisible, setModalVisible] = useState(false);
-    const [withdrawForm, setWithdrawForm] = useState<WithdrawalForm>(INITIAL_FORM);
-    const [loading, setLoading] = useState(false);
-    const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+const RADIUS = {
+    small: 4,
+    medium: 8,
+    large: 12,
+    xl: 16,
+    xxl: 20,
+    round: 50,
+};
+export default function Withdraw() {
+    const [loading, setLoading] = useState(false)
+    const [submitting, setSubmitting] = useState(false)
+    const [withdrawals, setWithdrawals] = useState([])
+    const [errors, setErrors] = useState({})
+    const [checkBhData, setBhData] = useState(null)
+    const [tdsData, setTdsData] = useState(null)
+    const [fetchingTds, setFetchingTds] = useState(false)
+
+    const [serverErrors, setServerErrors] = useState(null)
+    const [showModal, setShowModal] = useState(false)
+    const route = useRoute()
     const { user } = useAuth()
+
+    //   const { _id, wallet } = route.params || { _id: "user123" }
+
+    const [formData, setFormData] = useState({
+        amount: "",
+        method: "UPI",
+        isBank: false,
+        isUpi: true,
+        BankDetails: {
+            accountNo: "",
+            ifsc_code: "",
+            bankName: "",
+        },
+        upi_details: {
+            upi_id: "",
+        },
+    })
+
+    useEffect(() => {
+
+        fetchWithdrawals()
+        fetchTdsData()
+    }, [])
+
+    const fetchTdsData = async () => {
+        setFetchingTds(true)
+        try {
+            const response = await axios.get(
+                "https://www.webapi.olyox.com/api/v1/get_single_commission_tds/681fa157d45bee7fc60813cb",
+            )
+            if (response.data.success) {
+                setTdsData(response.data.data)
+            }
+        } catch (error) {
+            console.error("Error fetching TDS data:", error)
+        } finally {
+            setFetchingTds(false)
+        }
+    }
 
     const fetchWithdrawals = async () => {
         setLoading(true);
@@ -111,14 +160,105 @@ export default function WithdrawScreen() {
         fetchWithdrawals();
     }, [user.BH_DETAILS?.data?._id]);
 
-    console.log(user.BH_DETAILS?.data)
+
+    const validateForm = () => {
+        const newErrors = {}
+
+        if (!formData.amount || Number.parseFloat(formData.amount) <= 0) {
+            newErrors.amount = "Please enter a valid amount"
+        }
+
+        if (formData.isBank) {
+            if (!formData.BankDetails.accountNo || !/^\d{9,18}$/.test(formData.BankDetails.accountNo)) {
+                newErrors.accountNo = "Please enter a valid account number (9-18 digits)"
+            }
+            if (!formData.BankDetails.ifsc_code || !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(formData.BankDetails.ifsc_code)) {
+                newErrors.ifsc_code = "Please enter a valid IFSC code"
+            }
+            if (!formData.BankDetails.bankName) {
+                newErrors.bankName = "Please enter bank name"
+            }
+        }
+
+        if (formData.isUpi) {
+            if (!formData.upi_details.upi_id || !/^[\w.-]+@[\w.-]+$/.test(formData.upi_details.upi_id)) {
+                newErrors.upi_id = "Please enter a valid UPI ID"
+            }
+        }
+
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
+    }
+
+    const handleInputChange = (name, value) => {
+        setErrors((prev) => ({ ...prev, [name]: "" }))
+        setServerErrors(null)
+
+        if (["accountNo", "ifsc_code", "bankName"].includes(name)) {
+            setFormData((prev) => ({
+                ...prev,
+                BankDetails: {
+                    ...prev.BankDetails,
+                    [name]: value,
+                },
+            }))
+        } else if (name === "upi_id") {
+            setFormData((prev) => ({
+                ...prev,
+                upi_details: {
+                    ...prev.upi_details,
+                    upi_id: value,
+                },
+            }))
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                [name]: value,
+            }))
+        }
+    }
+
+    const handleMethodChange = (method) => {
+        setFormData((prev) => ({
+            ...prev,
+            method: method === "Bank" ? "Bank Transfer" : "UPI",
+            isBank: method === "Bank",
+            isUpi: method === "UPI",
+        }))
+        setErrors({})
+        setServerErrors(null)
+    }
+
+    const calculateDeductions = () => {
+        if (!formData.amount || isNaN(Number.parseFloat(formData.amount)) || !tdsData) {
+            return { commission: 0, tds: 0, finalAmount: 0 }
+        }
+
+        const amount = Number.parseFloat(formData.amount)
+        const commissionPercentage = tdsData.withdrawCommision || 0
+        const tdsPercentage = tdsData.isActive ? tdsData.tdsPercentage || 0 : 0
+
+        const commission = (amount * commissionPercentage) / 100
+        const tds = (amount * tdsPercentage) / 100
+        const finalAmount = amount - commission - tds
+
+        return {
+            commission,
+            tds,
+            finalAmount,
+        }
+    }
+
+    const { commission, tds, finalAmount } = calculateDeductions()
+
     const handleSubmit = async () => {
-        if (!withdrawForm.amount || parseFloat(withdrawForm.amount) <= 0) {
+        console.log("i am ")
+        if (!formData.amount || parseFloat(formData.amount) <= 0) {
             Alert.alert('Error', 'Please enter a valid amount');
             return;
         }
 
-        if (parseFloat(withdrawForm.amount) > user.BH_DETAILS?.data?.wallet) {
+        if (parseFloat(formData.amount) > user.BH_DETAILS?.data?.wallet) {
             Alert.alert('Error', 'Insufficient balance');
             return;
         }
@@ -126,550 +266,654 @@ export default function WithdrawScreen() {
 
         setLoading(true);
         try {
-            await axios.post(`https://www.webapi.olyox.com/api/v1/create-withdrawal?_id=${user.BH_DETAILS?.data?._id}`, withdrawForm);
+            await axios.post(`https://www.webapi.olyox.com/api/v1/create-withdrawal?_id=${user.BH_DETAILS?.data?._id}`, formData);
 
             Alert.alert('Success', 'Withdrawal request submitted successfully');
             setModalVisible(false);
             fetchWithdrawals();
         } catch (error) {
+            console.log(error?.response?.data)
             Alert.alert('Error', 'Failed to submit withdrawal request');
         } finally {
             setLoading(false);
         }
     };
 
-    const WithdrawalCard = ({ withdrawal }: { withdrawal: Withdrawal }) => (
-        <View style={styles.card}>
-            <View style={styles.cardHeader}>
-                <View style={styles.methodBadge}>
-                    {withdrawal.method === 'UPI' ? (
-                        <Feather name='credit-card' size={20} color="#2196F3" />
-                    ) : (
-                        <FontAwesome name='bank' size={20} color="#2196F3" />
-                    )}
-                    <Text style={styles.methodText}>{withdrawal.method}</Text>
+
+
+    const renderWithdrawalHistory = () => {
+        if (withdrawals.length === 0) {
+            return (
+                <View style={styles.emptyState}>
+                    <MaterialCommunityIcons name="history" size={60} color={COLORS.lightGray} />
+                    <Text style={styles.emptyStateText}>No withdrawal history found</Text>
                 </View>
-                <Text style={styles.amount}>₹{withdrawal.amount}</Text>
-            </View>
+            )
+        }
 
-            <View style={[
-                styles.statusBadge,
-                { backgroundColor: getStatusColor(withdrawal.status).bg }
-            ]}>
-                {withdrawal.status === 'Approved' ? (
-                    <Feather name='alert-circle' size={18} color={getStatusColor(withdrawal.status).text} />
-                ) : withdrawal.status === 'Pending' ? (
-                    <Feather name='clock' size={18} color={getStatusColor(withdrawal.status).text} />
-                ) : (
-                    <Feather name='x' size={18} color={getStatusColor(withdrawal.status).text} />
-                )}
-                <Text style={[
-                    styles.statusText,
-                    { color: getStatusColor(withdrawal.status).text }
-                ]}>
-                    {withdrawal.status}
-                </Text>
-            </View>
-
-            <View style={styles.cardDetails}>
-                {withdrawal.method === 'UPI' ? (
-                    <DetailRow
-                        icon={'@'}
-                        label="UPI ID"
-                        value={withdrawal.upi_details?.upi_id || 'N/A'}
-                    />
-                ) : (
-                    <>
-                        <DetailRow
-                            icon={<Feather name='bank' size={18} color="#666" />}
-                            label="Bank"
-                            value={withdrawal.BankDetails?.bankName || 'N/A'}
+        return withdrawals.map((item, index) => (
+            <View key={index} style={styles.historyItem}>
+                <View style={styles.historyItemHeader}>
+                    <View style={styles.historyItemLeft}>
+                        <MaterialIcons
+                            name={item.method === "UPI" ? "payment" : "account-balance"}
+                            size={24}
+                            color={COLORS.primary}
                         />
-                        <DetailRow
-                            icon={<Feather name='credit-card' size={18} color="#666" />}
-                            label="Account"
-                            value={withdrawal.BankDetails?.accountNo || 'N/A'}
-                        />
-                        <DetailRow
-                            icon={<Feather name='barcode' size={18} color="#666" />}
-                            label="IFSC"
-                            value={withdrawal.BankDetails?.ifsc_code || 'N/A'}
-                        />
-                    </>
-                )}
-
-                <DetailRow
-                    icon={<Feather name='calendar' size={18} color="#666" />}
-                    label="Date"
-                    value={formatDate(withdrawal.requestedAt)}
-                />
+                        <View style={styles.historyItemDetails}>
+                            <Text style={styles.historyItemMethod}>{item.method}</Text>
+                            <Text style={styles.historyItemDate}>{new Date(item.createdAt).toLocaleDateString()}</Text>
+                        </View>
+                    </View>
+                    <View
+                        style={[
+                            styles.statusBadge,
+                            item.status === "Completed"
+                                ? styles.successBadge
+                                : item.status === "Pending"
+                                    ? styles.pendingBadge
+                                    : styles.rejectedBadge,
+                        ]}
+                    >
+                        <Text style={styles.statusText}>{item.status}</Text>
+                    </View>
+                </View>
+                <View style={styles.historyItemBody}>
+                    <Text style={styles.amountText}>₹{Number.parseFloat(item.amount).toFixed(2)}</Text>
+                    {item.method === "UPI" && <Text style={styles.detailText}>UPI: {item.upi_details?.upi_id}</Text>}
+                    {item.method === "Bank Transfer" && (
+                        <>
+                            <Text style={styles.detailText}>Bank: {item.BankDetails?.bankName}</Text>
+                            <Text style={styles.detailText}>
+                                A/C: {item.BankDetails?.accountNo?.replace(/(\d{4})(\d+)(\d{4})/, "$1****$3")}
+                            </Text>
+                        </>
+                    )}
+                </View>
             </View>
-        </View>
-    );
-
-    const DetailRow = ({ icon, label, value }: {
-        icon: React.ReactNode;
-        label: string;
-        value: string;
-    }) => (
-        <View style={styles.detailRow}>
-            {icon}
-            <Text style={styles.detailLabel}>{label}:</Text>
-            <Text style={styles.detailValue}>{value}</Text>
-        </View>
-    );
+        ))
+    }
 
     return (
-        // <SafeAreaView style={styles.container}>
-
-        // </SafeAreaView>
-        <Layout isHeaderShow={false}>
-            <View style={styles.header}>
-                <View>
-                    <Text style={styles.headerTitle}>Withdrawals</Text>
-                    <Text style={styles.headerBalance}>Balance: ₹{user.BH_DETAILS?.data?.wallet}</Text>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
+            <LinearGradient colors={[COLORS.primary, "#8A84FF"]} style={styles.header}>
+                <View style={styles.headerContent}>
+                    <Text style={styles.headerTitle}>Withdraw Funds</Text>
+                    <FontAwesome name="money" size={24} color={COLORS.light} />
                 </View>
-                <TouchableOpacity
-                    style={styles.newButton}
-                    onPress={() => setModalVisible(true)}
-                >
-                    <Feather name='plus' size={20} color="#fff" />
-                    <Text style={styles.newButtonText}>Withdraw</Text>
-                </TouchableOpacity>
-            </View>
-
-            {loading ? (
-                <View style={styles.loader}>
-                    <ActivityIndicator size="large" color="#2196F3" />
+                <View style={styles.balanceCard}>
+                    <Text style={styles.balanceLabel}>Available Balance</Text>
+                    <Text style={styles.balanceAmount}>₹{user.BH_DETAILS?.data?.wallet || user.BH_DETAILS?.data?.wallet || 0}</Text>
+                    <TouchableOpacity style={styles.withdrawButton} onPress={() => setShowModal(true)}>
+                        <Text style={styles.withdrawButtonText}>Withdraw Now</Text>
+                        <MaterialIcons name="arrow-forward" size={18} color={COLORS.light} />
+                    </TouchableOpacity>
                 </View>
-            ) : (
-                <ScrollView style={styles.content}>
-                    {withdrawals.length === 0 ? (
-                        <View style={styles.empty}>
-                            <FontAwesome name='rupee' size={64} color="#666" />
-                            <Text style={styles.emptyText}>No withdrawals yet</Text>
-                        </View>
-                    ) : (
-                        withdrawals.map(withdrawal => (
-                            <WithdrawalCard key={withdrawal._id} withdrawal={withdrawal} />
-                        ))
-                    )}
-                </ScrollView>
-            )}
+            </LinearGradient>
 
-            <WithdrawalModal
-                visible={modalVisible}
-                onClose={() => setModalVisible(false)}
-                form={withdrawForm}
-                setForm={setWithdrawForm}
-                onSubmit={handleSubmit}
-                loading={loading}
-            />
-        </Layout>
-    );
-}
-
-const WithdrawalModal = ({
-    visible,
-    onClose,
-    form,
-    setForm,
-    onSubmit,
-    loading
-}: {
-    visible: boolean;
-    onClose: () => void;
-    form: WithdrawalForm;
-    setForm: (form: WithdrawalForm) => void;
-    onSubmit: () => void;
-    loading: boolean;
-}) => (
-    <Modal
-        visible={visible}
-        animationType="slide"
-        transparent
-        onRequestClose={onClose}
-    >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>New Withdrawal</Text>
-                        <TouchableOpacity onPress={onClose}>
-                            <Feather name='x' size={24} color="#666" />
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Withdrawal History</Text>
+                        <TouchableOpacity onPress={fetchWithdrawals}>
+                            <Ionicons name="refresh" size={20} color={COLORS.primary} />
                         </TouchableOpacity>
                     </View>
 
-                    <ScrollView>
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Amount</Text>
-                            <View style={styles.inputWrapper}>
-                                <FontAwesome name='rupee' size={20} color="#666" />
-                                <TextInput
-                                    style={styles.input}
-                                    keyboardType="numeric"
-                                    placeholder="Enter amount"
-                                    value={form.amount}
-                                    onChangeText={(text) => setForm({ ...form, amount: text })}
-                                />
-                            </View>
+                    {loading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color={COLORS.primary} />
+                            <Text style={styles.loadingText}>Loading history...</Text>
+                        </View>
+                    ) : (
+                        <View style={styles.historyList}>{renderWithdrawalHistory()}</View>
+                    )}
+                </View>
+            </ScrollView>
+
+            {showModal && (
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Request Withdrawal</Text>
+                            <TouchableOpacity onPress={() => setShowModal(false)}>
+                                <Ionicons name="close" size={24} color={COLORS.dark} />
+                            </TouchableOpacity>
                         </View>
 
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Payment Method</Text>
-                            <View style={styles.methodButtons}>
-                                {['UPI', 'Bank Transfer'].map((method) => (
-                                    <TouchableOpacity
-                                        key={method}
-                                        style={[
-                                            styles.methodButton,
-                                            form.method === method && styles.methodButtonActive
-                                        ]}
-                                        onPress={() => setForm({
-                                            ...form,
-                                            method: method as WithdrawalForm['method'],
-                                            isBank: method === 'Bank Transfer',
-                                            isUpi: method === 'UPI'
-                                        })}
-                                    >
-                                        {method === 'UPI' ? (
-                                            <Feather name='credit-card' size={20} color={form.method === method ? '#fff' : '#666'} />
-                                        ) : (
-                                            <FontAwesome name='bank' size={20} color={form.method === method ? '#fff' : '#666'} />
-                                        )}
-                                        <Text style={[
-                                            styles.methodButtonText,
-                                            form.method === method && styles.methodButtonTextActive
-                                        ]}>
-                                            {method}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
+                        {serverErrors && (
+                            <View style={styles.serverError}>
+                                <MaterialIcons name="error" size={20} color={COLORS.light} />
+                                <Text style={styles.serverErrorText}>{serverErrors}</Text>
                             </View>
-                        </View>
+                        )}
 
-                        {form.method === 'UPI' ? (
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>UPI ID</Text>
-                                <View style={styles.inputWrapper}>
-                                    <Text>@</Text>
+                        <ScrollView style={styles.formContainer}>
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>Amount</Text>
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.inputPrefix}>₹</Text>
                                     <TextInput
                                         style={styles.input}
-                                        placeholder="Enter UPI ID"
-                                        value={form.upi_details.upi_id}
-                                        onChangeText={(text) => setForm({
-                                            ...form,
-                                            upi_details: { upi_id: text }
-                                        })}
+                                        placeholder="Enter amount"
+                                        keyboardType="numeric"
+                                        value={formData.amount}
+                                        onChangeText={(value) => handleInputChange("amount", value)}
                                     />
                                 </View>
+                                {errors.amount && <Text style={styles.errorText}>{errors.amount}</Text>}
                             </View>
-                        ) : (
-                            <>
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>Bank Name</Text>
-                                    <View style={styles.inputWrapper}>
-                                        <FontAwesome name='bank' size={20} color="#666" />
+
+                            {/* TDS and Commission Calculation Section */}
+                            {formData.amount &&
+                                !isNaN(Number.parseFloat(formData.amount)) &&
+                                Number.parseFloat(formData.amount) > 0 && (
+                                    <View style={styles.calculationCard}>
+                                        <Text style={styles.calculationTitle}>Withdrawal Breakdown</Text>
+
+                                        <View style={styles.calculationRow}>
+                                            <Text style={styles.calculationLabel}>Requested Amount</Text>
+                                            <Text style={styles.calculationValue}>₹{Number.parseFloat(formData.amount).toFixed(2)}</Text>
+                                        </View>
+
+                                        <View style={styles.calculationRow}>
+                                            <Text style={styles.calculationLabel}>Processing Fee ({tdsData?.withdrawCommision || 0}%)</Text>
+                                            <Text style={styles.calculationValueNegative}>- ₹{commission.toFixed(2)}</Text>
+                                        </View>
+
+                                        {tdsData?.isActive && (
+                                            <View style={styles.calculationRow}>
+                                                <Text style={styles.calculationLabel}>TDS ({tdsData?.tdsPercentage || 0}%)</Text>
+                                                <Text style={styles.calculationValueNegative}>- ₹{tds.toFixed(2)}</Text>
+                                            </View>
+                                        )}
+
+                                        <View style={styles.divider} />
+
+                                        <View style={styles.calculationRow}>
+                                            <Text style={styles.calculationTotal}>You Will Receive</Text>
+                                            <Text style={styles.calculationTotalValue}>₹{finalAmount.toFixed(2)}</Text>
+                                        </View>
+
+                                        <View style={styles.infoContainer}>
+                                            <MaterialIcons name="info-outline" size={16} color={COLORS.primary} />
+                                            <Text style={styles.infoText}>
+                                                {tdsData?.isActive
+                                                    ? "TDS (Tax Deducted at Source) will be deducted as per government regulations."
+                                                    : "Platform fee will be deducted from your withdrawal amount."}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                )}
+
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>Payment Method</Text>
+                                <View style={styles.methodSelector}>
+                                    <TouchableOpacity
+                                        style={[styles.methodOption, formData.isUpi && styles.methodOptionActive]}
+                                        onPress={() => handleMethodChange("UPI")}
+                                    >
+                                        <MaterialIcons name="payment" size={24} color={formData.isUpi ? COLORS.light : COLORS.primary} />
+                                        <Text style={[styles.methodText, formData.isUpi && styles.methodTextActive]}>UPI</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        style={[styles.methodOption, formData.isBank && styles.methodOptionActive]}
+                                        onPress={() => handleMethodChange("Bank")}
+                                    >
+                                        <MaterialIcons
+                                            name="account-balance"
+                                            size={24}
+                                            color={formData.isBank ? COLORS.light : COLORS.primary}
+                                        />
+                                        <Text style={[styles.methodText, formData.isBank && styles.methodTextActive]}>Bank Transfer</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+
+                            {formData.isUpi && (
+                                <View style={styles.formGroup}>
+                                    <Text style={styles.label}>UPI ID</Text>
+                                    <View style={styles.inputContainer}>
+                                        <MaterialIcons name="smartphone" size={20} color={COLORS.gray} style={styles.inputIcon} />
                                         <TextInput
                                             style={styles.input}
-                                            placeholder="Enter bank name"
-                                            value={form.BankDetails.bankName}
-                                            onChangeText={(text) => setForm({
-                                                ...form,
-                                                BankDetails: { ...form.BankDetails, bankName: text }
-                                            })}
+                                            placeholder="example@upi"
+                                            value={formData.upi_details.upi_id}
+                                            onChangeText={(value) => handleInputChange("upi_id", value)}
                                         />
                                     </View>
+                                    {errors.upi_id && <Text style={styles.errorText}>{errors.upi_id}</Text>}
                                 </View>
+                            )}
 
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>Account Number</Text>
-                                    <View style={styles.inputWrapper}>
-                                        <Feather name='credit-card' size={20} color="#666" />
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="Enter account number"
-                                            keyboardType="numeric"
-                                            value={form.BankDetails.accountNo}
-                                            onChangeText={(text) => setForm({
-                                                ...form,
-                                                BankDetails: { ...form.BankDetails, accountNo: text }
-                                            })}
-                                        />
+                            {formData.isBank && (
+                                <>
+                                    <View style={styles.formGroup}>
+                                        <Text style={styles.label}>Bank Name</Text>
+                                        <View style={styles.inputContainer}>
+                                            <MaterialIcons name="business" size={20} color={COLORS.gray} style={styles.inputIcon} />
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="Enter bank name"
+                                                value={formData.BankDetails.bankName}
+                                                onChangeText={(value) => handleInputChange("bankName", value)}
+                                            />
+                                        </View>
+                                        {errors.bankName && <Text style={styles.errorText}>{errors.bankName}</Text>}
                                     </View>
-                                </View>
 
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>IFSC Code</Text>
-                                    <View style={styles.inputWrapper}>
-                                        <FontAwesome name='barcode' size={20} color="#666" />
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="Enter IFSC code"
-                                            autoCapitalize="characters"
-                                            value={form.BankDetails.ifsc_code}
-                                            onChangeText={(text) => setForm({
-                                                ...form,
-                                                BankDetails: { ...form.BankDetails, ifsc_code: text }
-                                            })}
-                                        />
+                                    <View style={styles.formGroup}>
+                                        <Text style={styles.label}>Account Number</Text>
+                                        <View style={styles.inputContainer}>
+                                            <MaterialIcons name="account-box" size={20} color={COLORS.gray} style={styles.inputIcon} />
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="Enter account number"
+                                                keyboardType="numeric"
+                                                value={formData.BankDetails.accountNo}
+                                                onChangeText={(value) => handleInputChange("accountNo", value)}
+                                            />
+                                        </View>
+                                        {errors.accountNo && <Text style={styles.errorText}>{errors.accountNo}</Text>}
                                     </View>
-                                </View>
-                            </>
-                        )}
-                    </ScrollView>
 
-                    <TouchableOpacity
-                        style={styles.submitButton}
-                        onPress={onSubmit}
-                        disabled={loading}
-                    >
-                        <Text style={styles.submitButtonText}>
-                            {loading ? 'Processing...' : 'Submit Withdrawal'}
-                        </Text>
-                        <Feather name='arrow-right' size={20} color="#fff" />
-                    </TouchableOpacity>
+                                    <View style={styles.formGroup}>
+                                        <Text style={styles.label}>IFSC Code</Text>
+                                        <View style={styles.inputContainer}>
+                                            <MaterialIcons name="code" size={20} color={COLORS.gray} style={styles.inputIcon} />
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="Enter IFSC code"
+                                                autoCapitalize="characters"
+                                                value={formData.BankDetails.ifsc_code}
+                                                onChangeText={(value) => handleInputChange("ifsc_code", value)}
+                                            />
+                                        </View>
+                                        {errors.ifsc_code && <Text style={styles.errorText}>{errors.ifsc_code}</Text>}
+                                    </View>
+                                </>
+                            )}
+
+                            <TouchableOpacity
+                                style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
+                                onPress={handleSubmit}
+                                disabled={submitting}
+                            >
+                                {submitting ? (
+                                    <ActivityIndicator size="small" color={COLORS.light} />
+                                ) : (
+                                    <>
+                                        <Text style={styles.submitButtonText}>Submit Request</Text>
+                                        <MaterialIcons name="send" size={18} color={COLORS.light} />
+                                    </>
+                                )}
+                            </TouchableOpacity>
+                        </ScrollView>
+                    </View>
                 </View>
-            </View>
-        </TouchableWithoutFeedback>
-    </Modal>
-);
-
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-};
-
-const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-        case 'approved':
-            return { bg: '#4CAF5020', text: '#4CAF50' };
-        case 'pending':
-            return { bg: '#FFA00020', text: '#FFA000' };
-        case 'rejected':
-            return { bg: '#FF525220', text: '#FF5252' };
-        default:
-            return { bg: '#66666620', text: '#666666' };
-    }
-};
+            )}
+        </KeyboardAvoidingView>
+    )
+}
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: COLORS.background,
     },
     header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 16,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        paddingTop: 60,
+        paddingBottom: 80,
+        paddingHorizontal: SPACING.large,
+    },
+    headerContent: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: SPACING.large,
     },
     headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#333',
+        fontSize: SIZES.xxl,
+        fontWeight: WEIGHTS.bold,
+        color: COLORS.light,
     },
-    headerBalance: {
-        fontSize: 16,
-        color: '#666',
-        marginTop: 4,
+    balanceCard: {
+        backgroundColor: "rgba(255, 255, 255, 0.15)",
+        borderRadius: RADIUS.large,
+        padding: SPACING.large,
+        marginTop: SPACING.medium,
     },
-    newButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#2196F3',
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 20,
-        gap: 8,
+    balanceLabel: {
+        fontSize: SIZES.medium,
+        color: COLORS.light,
+        opacity: 0.8,
     },
-    newButtonText: {
-        color: '#fff',
-        fontWeight: '600',
+    balanceAmount: {
+        fontSize: SIZES.title,
+        fontWeight: WEIGHTS.bold,
+        color: COLORS.light,
+        marginVertical: SPACING.small,
+    },
+    withdrawButton: {
+        backgroundColor: "rgba(255, 255, 255, 0.2)",
+        borderRadius: RADIUS.round,
+        paddingVertical: SPACING.small,
+        paddingHorizontal: SPACING.large,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        alignSelf: "flex-start",
+        marginTop: SPACING.small,
+    },
+    withdrawButtonText: {
+        color: COLORS.light,
+        fontWeight: WEIGHTS.medium,
+        marginRight: SPACING.small,
     },
     content: {
         flex: 1,
-        padding: 16,
+        marginTop: -40,
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        backgroundColor: COLORS.background,
+        paddingHorizontal: SPACING.large,
     },
-    loader: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+    section: {
+        marginTop: SPACING.large,
+        marginBottom: SPACING.xxxl,
     },
-    empty: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 100,
+    sectionHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: SPACING.large,
     },
-    emptyText: {
-        fontSize: 18,
-        color: '#666',
-        marginTop: 16,
+    sectionTitle: {
+        fontSize: SIZES.large,
+        fontWeight: WEIGHTS.semiBold,
+        color: COLORS.dark,
     },
-    card: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-            },
-            android: {
-                elevation: 4,
-            },
-        }),
+    loadingContainer: {
+        alignItems: "center",
+        justifyContent: "center",
+        padding: SPACING.xxxl,
     },
-    cardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 12,
+    loadingText: {
+        marginTop: SPACING.medium,
+        color: COLORS.gray,
+        fontSize: SIZES.medium,
     },
-    methodBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
+    historyList: {
+        marginBottom: SPACING.xxxl,
     },
-    methodText: {
-        fontSize: 16,
-        color: '#2196F3',
-        fontWeight: '600',
+    historyItem: {
+        backgroundColor: COLORS.light,
+        borderRadius: RADIUS.large,
+        padding: SPACING.large,
+        marginBottom: SPACING.large,
+        shadowColor: COLORS.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
     },
-    amount: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
+    historyItemHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: SPACING.medium,
+    },
+    historyItemLeft: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    historyItemDetails: {
+        marginLeft: SPACING.medium,
+    },
+    historyItemMethod: {
+        fontSize: SIZES.medium,
+        fontWeight: WEIGHTS.semiBold,
+        color: COLORS.dark,
+    },
+    historyItemDate: {
+        fontSize: SIZES.small,
+        color: COLORS.gray,
     },
     statusBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        alignSelf: 'flex-start',
-        padding: 8,
-        borderRadius: 20,
-        gap: 6,
-        marginBottom: 16,
+        paddingVertical: SPACING.xs,
+        paddingHorizontal: SPACING.small,
+        borderRadius: RADIUS.round,
+    },
+    successBadge: {
+        backgroundColor: COLORS.success + "20",
+    },
+    pendingBadge: {
+        backgroundColor: COLORS.warning + "20",
+    },
+    rejectedBadge: {
+        backgroundColor: COLORS.error + "20",
     },
     statusText: {
-        fontSize: 14,
-        fontWeight: '600',
+        fontSize: SIZES.xs,
+        fontWeight: WEIGHTS.semiBold,
     },
-    cardDetails: {
-        borderTopWidth: 1,
-        borderTopColor: '#eee',
-        paddingTop: 16,
-        gap: 12,
+    historyItemBody: {
+        marginTop: SPACING.small,
     },
-    detailRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
+    amountText: {
+        fontSize: SIZES.xl,
+        fontWeight: WEIGHTS.bold,
+        color: COLORS.dark,
+        marginBottom: SPACING.small,
     },
-    detailLabel: {
-        width: 70,
-        fontSize: 14,
-        color: '#666',
+    detailText: {
+        fontSize: SIZES.small,
+        color: COLORS.darkGray,
+        marginBottom: SPACING.xs,
     },
-    detailValue: {
-        flex: 1,
-        fontSize: 14,
-        color: '#333',
+    emptyState: {
+        alignItems: "center",
+        justifyContent: "center",
+        padding: SPACING.xxxl,
+    },
+    emptyStateText: {
+        marginTop: SPACING.medium,
+        color: COLORS.gray,
+        fontSize: SIZES.medium,
+        textAlign: "center",
     },
     modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'flex-end',
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 1000,
     },
     modalContent: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        padding: 20,
-        maxHeight: '90%',
+        backgroundColor: COLORS.light,
+        borderRadius: RADIUS.large,
+        width: "90%",
+        maxHeight: "80%",
+        padding: SPACING.large,
     },
     modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: SPACING.large,
     },
     modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#333',
+        fontSize: SIZES.large,
+        fontWeight: WEIGHTS.bold,
+        color: COLORS.dark,
     },
-    inputGroup: {
-        marginBottom: 20,
+    formContainer: {
+        maxHeight: 400,
+    },
+    formGroup: {
+        marginBottom: SPACING.large,
     },
     label: {
-        fontSize: 16,
-        color: '#666',
-        marginBottom: 8,
+        fontSize: SIZES.medium,
+        fontWeight: WEIGHTS.medium,
+        color: COLORS.dark,
+        marginBottom: SPACING.small,
     },
-    inputWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f5f5f5',
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        gap: 12,
+    inputContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        borderRadius: RADIUS.medium,
+        backgroundColor: COLORS.light,
+    },
+    inputPrefix: {
+        paddingHorizontal: SPACING.medium,
+        fontSize: SIZES.large,
+        color: COLORS.dark,
+        fontWeight: WEIGHTS.semiBold,
+    },
+    inputIcon: {
+        paddingLeft: SPACING.medium,
     },
     input: {
         flex: 1,
-        paddingVertical: 12,
-        fontSize: 16,
-        color: '#333',
+        paddingVertical: SPACING.medium,
+        paddingHorizontal: SPACING.medium,
+        fontSize: SIZES.medium,
+        color: COLORS.dark,
     },
-    methodButtons: {
-        flexDirection: 'row',
-        gap: 12,
+    errorText: {
+        color: COLORS.error,
+        fontSize: SIZES.small,
+        marginTop: SPACING.xs,
     },
-    methodButton: {
+    methodSelector: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+    },
+    methodOption: {
         flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 12,
-        borderRadius: 12,
-        backgroundColor: '#f5f5f5',
-        gap: 8,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: SPACING.medium,
+        borderWidth: 1,
+        borderColor: COLORS.primary,
+        borderRadius: RADIUS.medium,
+        marginRight: SPACING.small,
     },
-    methodButtonActive: {
-        backgroundColor: '#2196F3',
+    methodOptionActive: {
+        backgroundColor: COLORS.primary,
     },
-    methodButtonText: {
-        fontSize: 14,
-        color: '#666',
-        fontWeight: '600',
+    methodText: {
+        marginLeft: SPACING.small,
+        color: COLORS.primary,
+        fontWeight: WEIGHTS.medium,
     },
-    methodButtonTextActive: {
-        color: '#fff',
+    methodTextActive: {
+        color: COLORS.light,
     },
     submitButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#2196F3',
-        padding: 16,
-        borderRadius: 12,
-        marginTop: 20,
-        gap: 8,
+        backgroundColor: COLORS.primary,
+        borderRadius: RADIUS.medium,
+        paddingVertical: SPACING.medium,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        marginTop: SPACING.large,
+        marginBottom: SPACING.xxxl,
+    },
+    submitButtonDisabled: {
+        opacity: 0.7,
     },
     submitButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
+        color: COLORS.light,
+        fontWeight: WEIGHTS.semiBold,
+        fontSize: SIZES.medium,
+        marginRight: SPACING.small,
     },
-});
+    serverError: {
+        backgroundColor: COLORS.error,
+        borderRadius: RADIUS.medium,
+        padding: SPACING.medium,
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: SPACING.large,
+    },
+    serverErrorText: {
+        color: COLORS.light,
+        marginLeft: SPACING.small,
+        flex: 1,
+    },
+    // New styles for TDS calculation card
+    calculationCard: {
+        backgroundColor: "#F8F9FF",
+        borderRadius: RADIUS.medium,
+        padding: SPACING.large,
+        marginBottom: SPACING.large,
+        borderWidth: 1,
+        borderColor: "#E6E8F0",
+    },
+    calculationTitle: {
+        fontSize: SIZES.medium,
+        fontWeight: WEIGHTS.semiBold,
+        color: COLORS.dark,
+        marginBottom: SPACING.medium,
+    },
+    calculationRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: SPACING.small,
+    },
+    calculationLabel: {
+        fontSize: SIZES.small,
+        color: COLORS.darkGray,
+    },
+    calculationValue: {
+        fontSize: SIZES.small,
+        fontWeight: WEIGHTS.medium,
+        color: COLORS.dark,
+    },
+    calculationValueNegative: {
+        fontSize: SIZES.small,
+        fontWeight: WEIGHTS.medium,
+        color: COLORS.error,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: "#E6E8F0",
+        marginVertical: SPACING.small,
+    },
+    calculationTotal: {
+        fontSize: SIZES.medium,
+        fontWeight: WEIGHTS.semiBold,
+        color: COLORS.dark,
+    },
+    calculationTotalValue: {
+        fontSize: SIZES.large,
+        fontWeight: WEIGHTS.bold,
+        color: COLORS.success,
+    },
+    infoContainer: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+        backgroundColor: "rgba(66, 133, 244, 0.08)",
+        padding: SPACING.medium,
+        borderRadius: RADIUS.small,
+        marginTop: SPACING.medium,
+    },
+    infoText: {
+        fontSize: SIZES.xs,
+        color: COLORS.darkGray,
+        marginLeft: SPACING.small,
+        flex: 1,
+        lineHeight: 16,
+    },
+})

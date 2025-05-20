@@ -14,7 +14,7 @@ export default function Login() {
     const { BH } = route.params || {}
 
     const [otpType, setOtpType] = useState('text')
-    const [bhId, setBhId] = useState("BH881763")
+    const [bhId, setBhId] = useState("BH")
     const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState<string>("")
     const [otp, setOtp] = useState<string>("")
@@ -31,38 +31,46 @@ export default function Login() {
 
     }, [BH])
 
-    const handleLogin = async () => {
-        if (bhId.trim() === "BH" || bhId.trim() === "") {
-            setError("Please enter a valid BH ID")
-            return
-        }
+   const handleLogin = async () => {
+  if (bhId.trim().toUpperCase() === "BH" || bhId.trim() === "") {
+    setError("Please enter a valid BH ID");
+    return;
+  }
 
-        try {
-            setLoading(true)
-            setError("")
-            const response = await axios.post(`${API_URL_APP_LOCAL}/heavy/heavy-vehicle-login`, { Bh_Id: bhId, msgType: otpType })
+  try {
+    setLoading(true);
+    setError("");
 
+    const response = await axios.post(`${API_URL_APP_LOCAL}/heavy/heavy-vehicle-login`, {
+      Bh_Id: bhId,
+      msgType: otpType,
+    });
 
-            if (response.data && response.data.success) {
-                setIsOtpSent(true)
-                Alert.alert("Success", "OTP has been sent to your registered mobile number")
-            } else {
-                setError(response.data?.message || "Failed to send OTP. Please try again.")
-            }
-        } catch (error: any) {
-
-            if (error?.response?.status === 403) {
-                const data = error?.response?.data?.information || {}
-               
-                navigation.navigate('Complete_Profile', { data: { ...data, bhId } })
-                setError(error.response?.data?.message || "Failed to login. Please try again.")
-            }
-            console.log(error.response)
-            setError(error.response?.data?.message || "Failed to login. Please try again.")
-        } finally {
-            setLoading(false)
-        }
+    if (response.data && response.data.success) {
+      setIsOtpSent(true);
+      Alert.alert("Success", "OTP has been sent to your registered mobile number");
+    } else {
+      setError(response.data?.message || "Failed to send OTP. Please try again.");
     }
+  } catch (error) {
+    // Safe access to error response
+    const errResp = error?.response?.data;
+    if (errResp?.error === "Provider not founded by BH Id on website Please Register First !!") {
+      const data = errResp?.information || {};
+      navigation.navigate("Register");
+      setError(errResp?.message || "Failed to login. Please try again.");
+    } else {
+      // In case errResp is undefined, pass empty object
+      const data = errResp?.information || {};
+      navigation.navigate("Complete_Profile", { data: { ...data, bhId } });
+      setError(errResp?.message || "Failed to login. Please try again.");
+    }
+    console.log(error.response || error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     const handleVerifyLogin = async () => {
         if (!otp || otp.trim() === "") {
@@ -103,7 +111,7 @@ export default function Login() {
             setLoading(false)
         }
     }
-   
+
 
     const handleResendOtp = async () => {
         try {
@@ -129,7 +137,7 @@ export default function Login() {
 
             {/* OTP Type Buttons Row */}
             <View style={{
-               
+
                 marginBottom: 20,
                 flexDirection: 'row',
                 justifyContent: 'space-between',

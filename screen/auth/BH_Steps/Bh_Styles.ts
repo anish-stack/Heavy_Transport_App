@@ -88,6 +88,22 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: moderateScale(14),
   },
+   skipButton: {
+    marginTop: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: '#f0f0f0', // Light gray for subtle appearance
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  skipButtonText: {
+    fontSize: 16,
+    color: '#333', // Dark gray for good contrast
+    fontWeight: '600',
+  },
 });
 
 export default styles;

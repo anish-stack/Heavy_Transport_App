@@ -21,6 +21,7 @@ import styles from "./BH_Styles";
 import FormInput from "../../../components/FormInput";
 import AddressForm from "../../../components/AddressForm";
 import { MaterialIcons } from "@expo/vector-icons";
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 // Define route param types
 type RootStackParamList = {
@@ -67,6 +68,7 @@ interface FormData {
   category: string;
   address: Address;
   dob: string;
+  aadharNumber: string;
   member_id: string;
   referral_code_which_applied: string | undefined;
   is_referral_applied: boolean;
@@ -81,6 +83,7 @@ interface FormErrors {
   category?: string;
   pincode?: string;
   dob?: string;
+  aadharNumber?: string;
   [key: string]: string | undefined;
 }
 
@@ -94,8 +97,9 @@ const RegisterWithBh: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [currentFocus, setCurrentFocus] = useState<number>(0);
+  const [isDatePickerVisible, setDatePickerVisible] = useState<boolean>(false);
+  const [date, setDate] = useState<Date>(new Date(new Date().setFullYear(new Date().getFullYear() - 18)));
+  const [showDobError, setShowDobError] = useState<boolean>(false);
 
   // Refs for input fields
   const inputRefs = useRef<Array<TextInput | null>>([]);
@@ -103,23 +107,24 @@ const RegisterWithBh: React.FC = () => {
   // Initial form data
   const initialFormData: FormData = useMemo(
     () => ({
-      name: "Anish Jha",
-      email: "anishjha123456@gmail.com",
-      reEmail: "anishjha123456@gmail.com",
-      number: "9632589632",
-      password: "Mahakaal@21",
-      category: "676ef9795c75082fcbc59c51", // Default category
+      name: "",
+      email: "",
+      reEmail: "",
+      number: "",
+      password: "",
+      category: "676ef9795c75082fcbc59c51", 
       address: {
-        area: "Rohini",
+        area: "",
         street_address: "",
-        landmark: "Shiva",
-        pincode: "110085",
+        landmark: "",
+        pincode: "",
         location: {
           type: "Point",
           coordinates: [78.2693, 25.369], // Default coordinates
         },
       },
-      dob: "",
+      aadharNumber: '',
+      dob: formatDate(new Date(new Date().setFullYear(new Date().getFullYear() - 18))),
       member_id: "",
       referral_code_which_applied: bh_id,
       is_referral_applied: Boolean(bh_id),
@@ -128,6 +133,14 @@ const RegisterWithBh: React.FC = () => {
   );
 
   const [formData, setFormData] = useState<FormData>(initialFormData);
+
+  // Function to format date for display
+  function formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
 
   // Function to check BH ID validity
   const checkBhId = useCallback(async () => {
@@ -154,7 +167,22 @@ const RegisterWithBh: React.FC = () => {
     }
   }, [bh_id]);
 
-
+  // Format Aadhaar number as user types
+  const formatAadhar = (text: string): string => {
+    // Remove all spaces first
+    const cleaned = text.replace(/\s/g, '');
+    
+    // Add spaces after every 4 characters
+    let formatted = '';
+    for (let i = 0; i < cleaned.length && i < 12; i++) {
+      if (i > 0 && i % 4 === 0) {
+        formatted += ' ';
+      }
+      formatted += cleaned[i];
+    }
+    
+    return formatted;
+  };
 
   // Initialize data on component mount
   useEffect(() => {
@@ -184,57 +212,122 @@ const RegisterWithBh: React.FC = () => {
     }
   };
 
-  // Function to format date for display
-  const formatDate = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  // Function to validate age
+  const validateAge = (selectedDate: Date): boolean => {
+    const today = new Date();
+    const birthDate = new Date(selectedDate);
+    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age >= 18;
+  };
+
+  // Function to handle date change
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setDatePickerVisible(Platform.OS === 'ios');
+    
+    if (selectedDate) {
+      const isValidAge = validateAge(selectedDate);
+      
+      if (isValidAge) {
+        setDate(selectedDate);
+        const formattedDate = formatDate(selectedDate);
+        setFormData(prev => ({
+          ...prev,
+          dob: formattedDate
+        }));
+        
+        // Clear error if it exists
+        if (errors.dob) {
+          setErrors(prev => ({
+            ...prev,
+            dob: undefined
+          }));
+        }
+        setShowDobError(false);
+      } else {
+        setShowDobError(true);
+        setTimeout(() => setShowDobError(false), 3000);
+      }
+    }
+  };
+
+  // Function to validate a single field
+  const validateField = (field: keyof FormData, value: string): string | undefined => {
+    const currentDate = new Date();
+    
+    switch (field) {
+      case 'name':
+        return !value.trim() ? "Please enter your name." : undefined;
+      
+      case 'email':
+        if (!value.trim()) return "Please provide your email address.";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Please enter a valid email address.";
+        return undefined;
+      
+      case 'reEmail':
+        if (!value.trim()) return "Please re-enter your email address.";
+        if (value !== formData.email) return "Emails do not match.";
+        return undefined;
+      
+      case 'number':
+        if (!value.trim()) return "Please enter your phone number.";
+        if (!/^\d{10}$/.test(value)) return "Phone number must be exactly 10 digits.";
+        return undefined;
+      
+      case 'password':
+        if (!value.trim()) return "Please create a password.";
+        if (value.length < 8) return "Password must be at least 8 characters long.";
+        return undefined;
+      
+      case 'dob':
+        if (!value.trim()) return "Please enter your date of birth.";
+        const dobDate = new Date(value);
+        if (isNaN(dobDate.getTime())) return "Please enter a valid date.";
+        
+        const age = currentDate.getFullYear() - dobDate.getFullYear();
+        const m = currentDate.getMonth() - dobDate.getMonth();
+        if (m < 0 || (m === 0 && currentDate.getDate() < dobDate.getDate())) {
+          if (age <= 18) return "You must be at least 18 years old.";
+        }
+        return undefined;
+      
+      case 'aadharNumber':
+        if (!value.trim()) return "Please enter your Aadhaar number.";
+        if (!/^\d{4}\s\d{4}\s\d{4}$/.test(value)) return "Please enter a valid 12-digit Aadhaar number.";
+        return undefined;
+      
+      default:
+        return undefined;
+    }
   };
 
   // Function to validate form data
   const validateForm = useCallback(() => {
     const newErrors: FormErrors = {};
-    const currentDate = new Date();
-    const dobDate = new Date(formData.dob);
 
-    if (!formData.name.trim()) newErrors.name = "Please enter your name.";
-    if (!formData.dob.trim()) {
-      newErrors.dob = "Please enter your date of birth.";
-    } else if (isNaN(dobDate.getTime())) {
-      newErrors.dob = "Please enter a valid date in YYYY-MM-DD format.";
-    } else {
-      const age = currentDate.getFullYear() - dobDate.getFullYear();
-      if (age < 18) newErrors.dob = "You must be at least 18 years old.";
-    }
+    // Validate all fields
+    Object.entries(formData).forEach(([key, value]) => {
+      if (key === 'address' || key === 'category' || key === 'is_referral_applied' || 
+          key === 'member_id' || key === 'referral_code_which_applied') {
+        return; // Skip these fields or handle separately
+      }
+      
+      const error = validateField(key as keyof FormData, value as string);
+      if (error) {
+        newErrors[key] = error;
+      }
+    });
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Please provide your email address.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address.";
-    }
-
-    if (!formData.reEmail.trim()) {
-      newErrors.reEmail = "Please re-enter your email address.";
-    } else if (formData.email !== formData.reEmail) {
-      newErrors.reEmail = "Emails do not match.";
-    }
-
-    if (!formData.number.trim()) {
-      newErrors.number = "Please enter your phone number.";
-    } else if (!/^\d{10}$/.test(formData.number)) {
-      newErrors.number = "Phone number must be exactly 10 digits.";
-    }
-
-    if (!formData.password.trim()) {
-      newErrors.password = "Please create a password.";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters long.";
-    }
-
-    if (!formData.category) newErrors.category = "Please select a category.";
-    if (!formData.address.pincode.trim())
+    // Validate address fields
+    if (!formData.address.pincode.trim()) {
       newErrors.pincode = "Please enter your pincode.";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -242,17 +335,19 @@ const RegisterWithBh: React.FC = () => {
 
   // Function to handle form submission
   const handleSubmit = async () => {
-    console.log("!validateForm()!", !validateForm());
-    // if (!validateForm()) return;
+    if (!validateForm()) {
+      Alert.alert("Form Error", "Please correct the errors in the form before submitting.");
+      return;
+    }
+
     setSubmitting(true);
-    console.log("Submit Done!");
+    
     try {
       const response = await axios.post(
         `${API_URL_WEB}/api/v1/register_vendor`,
         formData
       );
-      console.log(response.data?.success)
-
+  console.error("Registration response.data:", response.data);
       if (response.data?.success) {
         navigation.navigate("OtpVerify", {
           type: response.data.type,
@@ -260,34 +355,40 @@ const RegisterWithBh: React.FC = () => {
           expireTime: response.data.time,
           number: response.data.number,
         });
+      } else {
+        Alert.alert("Registration Error", response.data?.message || "Registration failed");
       }
     } catch (error: any) {
-      console.error(error);
-      const errorMessage =
-        error.response?.data?.message || "Registration failed";
+      console.error("Registration error:", error);
+      const errorMessage = error.response?.data?.message || "Registration failed. Please try again later.";
       Alert.alert("Registration Error", errorMessage);
     } finally {
       setSubmitting(false);
     }
-  }
+  };
 
-  // Function to handle input changes
+  // Function to handle input changes with real-time validation
   const handleInputChange = useCallback(
     (field: keyof FormData, value: string) => {
+      // Format aadhaar number if needed
+      if (field === 'aadharNumber') {
+        value = formatAadhar(value);
+      }
+      
       setFormData((prevData) => ({
         ...prevData,
         [field]: value,
       }));
 
-      // Clear error when user types
-      if (errors[field]) {
-        setErrors(prev => ({
-          ...prev,
-          [field]: undefined
-        }));
-      }
+      // Real-time validation
+      const error = validateField(field, value);
+      
+      setErrors(prev => ({
+        ...prev,
+        [field]: error
+      }));
     },
-    [errors]
+    [formData]
   );
 
   // Function to handle address changes
@@ -312,7 +413,6 @@ const RegisterWithBh: React.FC = () => {
     [errors]
   );
 
-
   // Computed properties
   const isButtonDisabled = useMemo(() => {
     return submitting || !isBhVerify;
@@ -333,7 +433,7 @@ const RegisterWithBh: React.FC = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Loading...</Text>
+        <Text style={styles.loadingText}>Verifying details...</Text>
       </View>
     );
   }
@@ -341,10 +441,18 @@ const RegisterWithBh: React.FC = () => {
   // Render error state for invalid BH ID
   if (!isBhVerify && bh_id) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.errorContainer}>
+        <MaterialIcons name="error-outline" size={48} color="#FF5252" />
+        <Text style={styles.errorTitle}>Invalid Referral Code</Text>
         <Text style={styles.errorText}>
-          Invalid BH ID. Please check and try again.
+          The BH ID "{bh_id}" could not be verified. Please check and try again.
         </Text>
+        <TouchableOpacity
+          style={styles.errorButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.errorButtonText}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -357,7 +465,7 @@ const RegisterWithBh: React.FC = () => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
           <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>Register Your Account</Text>
+          
 
             {/* Name Input */}
             <FormInput
@@ -372,7 +480,58 @@ const RegisterWithBh: React.FC = () => {
               blurOnSubmit={false}
             />
 
+            {/* Aadhaar Number Input */}
+            <FormInput
+              label="Aadhaar Number"
+              value={formData.aadharNumber}
+              onChangeText={(text) => handleInputChange("aadharNumber", text)}
+              error={errors.aadharNumber}
+              placeholder="XXXX XXXX XXXX"
+              keyboardType="numeric"
+              ref={(el) => (inputRefs.current[1] = el)}
+              onKeyPress={(e) => handleKeyPress(e, 1)}
+              returnKeyType="next"
+              blurOnSubmit={false}
+              maxLength={14} // 12 digits + 2 spaces
+            />
 
+            {/* Date of Birth Input */}
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Date of Birth (18+ years only)</Text>
+              <TouchableOpacity 
+                style={[
+                  styles.datePickerButton,
+                  errors.dob && styles.inputError
+                ]}
+                onPress={() => setDatePickerVisible(true)}
+              >
+                <Text style={[
+                  styles.datePickerText,
+                  !formData.dob && styles.placeholderText
+                ]}>
+                  {formData.dob || "Select your date of birth"}
+                </Text>
+                <MaterialIcons name="calendar-today" size={20} color="#555" />
+              </TouchableOpacity>
+              {errors.dob && <Text style={styles.errorText}>{errors.dob}</Text>}
+              {showDobError && (
+                <View style={styles.ageErrorContainer}>
+                  <Text style={styles.ageErrorText}>
+                    You must be at least 18 years old to register
+                  </Text>
+                </View>
+              )}
+              
+              {isDatePickerVisible && (
+                <DateTimePicker
+                  value={date}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={handleDateChange}
+                  maximumDate={new Date(new Date().setFullYear(new Date().getFullYear() - 18))}
+                />
+              )}
+            </View>
 
             {/* Email Input */}
             <FormInput
@@ -382,8 +541,8 @@ const RegisterWithBh: React.FC = () => {
               error={errors.email}
               placeholder="Enter your email"
               keyboardType="email-address"
-              ref={(el) => (inputRefs.current[1] = el)}
-              onKeyPress={(e) => handleKeyPress(e, 1)}
+              ref={(el) => (inputRefs.current[2] = el)}
+              onKeyPress={(e) => handleKeyPress(e, 2)}
               returnKeyType="next"
               blurOnSubmit={false}
               autoCapitalize="none"
@@ -397,8 +556,8 @@ const RegisterWithBh: React.FC = () => {
               error={errors.reEmail}
               placeholder="Re-enter your email"
               keyboardType="email-address"
-              ref={(el) => (inputRefs.current[2] = el)}
-              onKeyPress={(e) => handleKeyPress(e, 2)}
+              ref={(el) => (inputRefs.current[3] = el)}
+              onKeyPress={(e) => handleKeyPress(e, 3)}
               returnKeyType="next"
               blurOnSubmit={false}
               autoCapitalize="none"
@@ -412,8 +571,8 @@ const RegisterWithBh: React.FC = () => {
               error={errors.number}
               placeholder="Enter your phone number"
               keyboardType="phone-pad"
-              ref={(el) => (inputRefs.current[3] = el)}
-              onKeyPress={(e) => handleKeyPress(e, 3)}
+              ref={(el) => (inputRefs.current[4] = el)}
+              onKeyPress={(e) => handleKeyPress(e, 4)}
               returnKeyType="next"
               blurOnSubmit={false}
               maxLength={10}
@@ -427,13 +586,11 @@ const RegisterWithBh: React.FC = () => {
               error={errors.password}
               placeholder="Create a password"
               secureTextEntry
-              ref={(el) => (inputRefs.current[4] = el)}
-              onKeyPress={(e) => handleKeyPress(e, 4)}
+              ref={(el) => (inputRefs.current[5] = el)}
+              onKeyPress={(e) => handleKeyPress(e, 5)}
               returnKeyType="next"
               blurOnSubmit={false}
             />
-
-
 
             {/* Address Form */}
             <View style={styles.sectionDivider}>
@@ -445,7 +602,7 @@ const RegisterWithBh: React.FC = () => {
               onAddressChange={handleAddressChange}
               errors={errors}
               inputRefs={inputRefs}
-              startIndex={5}
+              startIndex={6}
             />
 
             {/* Referral Information */}
@@ -464,7 +621,7 @@ const RegisterWithBh: React.FC = () => {
             {/* Submit Button */}
             <TouchableOpacity
               style={buttonStyles}
-              onPress={() => handleSubmit()}
+              onPress={handleSubmit}
               disabled={isButtonDisabled}
             >
               {submitting ? (
